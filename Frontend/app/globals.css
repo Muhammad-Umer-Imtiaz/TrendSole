@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f3f0ea;
+  --foreground: #111111;
+  --muted: #5f5a54;
+  --surface: rgba(255, 255, 255, 0.88);
+  --surface-strong: #ffffff;
+  --border: rgba(17, 17, 17, 0.08);
+  --font-body: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "Avenir Next", "Arial Nova", "Segoe UI", sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-mono: "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #121212;
+    --foreground: #f5f2ec;
+    --muted: #c1bcb5;
+    --surface: rgba(24, 24, 24, 0.9);
+    --surface-strong: #1a1a1a;
+    --border: rgba(255, 255, 255, 0.09);
+  }
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background: #f5f3ee;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+:where(input, textarea, select, button) {
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    outline-color 160ms ease;
+}
+
+:where(input:not([type="checkbox"]):not([type="radio"]), textarea, select) {
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+:where(input, textarea, select, button):focus {
+  outline: 2px solid rgba(15, 23, 42, 0.92) !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.16) !important;
+}
+
+:where(input, textarea, select, button):focus-visible {
+  outline: 2px solid rgba(15, 23, 42, 0.92) !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.16) !important;
+}
+
+:where(input:not([type="checkbox"]):not([type="radio"]), textarea, select):focus {
+  border-color: rgba(15, 23, 42, 0.92) !important;
+}
+
+:where(input:not([type="checkbox"]):not([type="radio"]), textarea, select):focus-visible {
+  border-color: rgba(15, 23, 42, 0.92) !important;
+}
+
+::selection {
+  background: #111111;
+  color: #f5f2ec;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
