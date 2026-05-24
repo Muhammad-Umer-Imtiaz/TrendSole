@@ -1,4 +1,4 @@
-import express, { Router } from "express";
+import express from "express";
 import { validate } from "../middleware/validate.js";
 import {
   authorizePermissions,
@@ -34,7 +34,7 @@ import {
 } from "../controller/userController.js";
 
 
-const router:Router = express.Router();
+const router = express.Router();
 
 router.post(
   "/register",

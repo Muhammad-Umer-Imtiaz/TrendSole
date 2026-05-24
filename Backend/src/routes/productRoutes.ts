@@ -1,4 +1,4 @@
-import express, { Router } from "express";
+import express from "express";
 import {
   createProduct,
   deleteProduct,
@@ -9,7 +9,7 @@ import {
 import { authorizePermissions, protect } from "../middleware/auth.js";
 import { uploadProductImages } from "../middleware/uploadProductImages.js";
 
-const router: Router = express.Router();
+const router = express.Router();
 
 router.get("/", getAllProducts);
 router.get("/getAllProducts", getAllProducts);

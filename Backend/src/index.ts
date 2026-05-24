@@ -1,4 +1,4 @@
-import express, { type Express } from 'express'
+import express from 'express'
 import { fileURLToPath } from 'node:url'
 import { dbConnection } from './config/dbConnect.js'
 import userRoutes from './routes/userRoutes.js'
@@ -9,7 +9,7 @@ import feedbackRoutes from './routes/feedbackRoutes.js'
 import { analyticsRouter, dashboardRouter } from './routes/dashboardRoutes.js'
 import { globalErrorHandler } from './middleware/globalErrorHandler.js'
 
-const app: Express = express()
+const app = express()
 
 const Port = process.env.PORT ?? 3000
 const frontendUrl = process.env.FRONTEND_URL

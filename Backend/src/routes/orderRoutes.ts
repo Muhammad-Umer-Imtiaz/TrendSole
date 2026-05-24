@@ -1,4 +1,4 @@
-import express, { Router } from "express";
+import express from "express";
 import {
   createOrder,
   listMyOrders,
@@ -7,7 +7,7 @@ import {
 } from "../controller/orderController.js";
 import { authorizePermissions, protect } from "../middleware/auth.js";
 
-const router: Router = express.Router();
+const router = express.Router();
 
 router.use(protect);
 

@@ -1,12 +1,12 @@
-import express, { Router } from "express";
+import express from "express";
 import {
   getAnalyticsOverview,
   getDashboardOverview,
 } from "../controller/dashboardController.js";
 import { authorizePermissions, protect } from "../middleware/auth.js";
 
-const dashboardRouter: Router = express.Router();
-const analyticsRouter: Router = express.Router();
+const dashboardRouter = express.Router();
+const analyticsRouter = express.Router();
 
 dashboardRouter.use(protect);
 analyticsRouter.use(protect);

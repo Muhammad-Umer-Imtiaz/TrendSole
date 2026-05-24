@@ -1,4 +1,4 @@
-import express, { Router } from "express";
+import express from "express";
 import {
   createCategory,
   deleteCategory,
@@ -7,7 +7,7 @@ import {
 } from "../controller/categoryController.js";
 import { authorizePermissions, protect } from "../middleware/auth.js";
 
-const router: Router = express.Router();
+const router = express.Router();
 
 router.get("/", listCategories);
 router.post("/", protect, authorizePermissions("categories:create"), createCategory);
