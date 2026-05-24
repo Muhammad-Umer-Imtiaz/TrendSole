@@ -1,20 +1,22 @@
 {
-  "name": "Backend",
+  "name": "trendsole-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "TrendSole backend API",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "node --env-file=.env --import tsx --watch src/index.ts",
-    "start": "node --env-file=.env ./dist/index.js",
-    "build": "tsc",
-    "built": "pnpm run build"
+    "build": "tsc --project tsconfig.json",
+    "start": "node --env-file=.env dist/index.js",
+    "vercel-build": "pnpm run build"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "packageManager": "pnpm@10.26.0",
+  "engines": {
+    "node": "22.x"
+  },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
     "@types/cookie-parser": "^1.4.10",

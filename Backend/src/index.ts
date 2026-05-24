@@ -1,4 +1,5 @@
-import express from 'express'
+import express, { type Express } from 'express'
+import { fileURLToPath } from 'node:url'
 import { dbConnection } from './config/dbConnect.js'
 import userRoutes from './routes/userRoutes.js'
 import productRoutes from './routes/productRoutes.js'
@@ -8,10 +9,12 @@ import feedbackRoutes from './routes/feedbackRoutes.js'
 import { analyticsRouter, dashboardRouter } from './routes/dashboardRoutes.js'
 import { globalErrorHandler } from './middleware/globalErrorHandler.js'
 
-const app = express()
+const app: Express = express()
 
 const Port = process.env.PORT ?? 3000
-const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:3000"
+const frontendUrl = process.env.FRONTEND_URL
+const currentFilePath = fileURLToPath(import.meta.url)
+const isDirectRun = process.argv[1] === currentFilePath
 
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
@@ -34,10 +37,10 @@ app.use((req,res,next)=>{
     next()
 })
 
-dbConnection()
+void dbConnection()
 
 app.get('/',(req,res)=>{
-    res.send('Hello World!')
+  res.json({ message: "Backend running" });
 })
 
 app.use('/api/v1/users',userRoutes)
@@ -49,6 +52,11 @@ app.use('/api/v1/dashboard',dashboardRouter)
 app.use('/api/v1/analytics',analyticsRouter)
 
 app.use(globalErrorHandler);
-app.listen(Port,()=>{
-    console.log(`Server is running on port ${Port}`)
-})
+
+export default app
+
+if (isDirectRun) {
+    app.listen(Port,()=>{
+        console.log(`Server is running on port ${Port}`)
+    })
+}
