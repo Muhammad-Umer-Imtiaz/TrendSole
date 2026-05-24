@@ -4,13 +4,35 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FiAlertCircle, FiArrowLeft, FiArrowRight, FiShoppingBag } from "react-icons/fi";
+import {
+  FiAlertCircle,
+  FiArrowLeft,
+  FiArrowRight,
+  FiCheckCircle,
+  FiPackage,
+  FiShoppingBag,
+  FiTruck,
+} from "react-icons/fi";
 import Footer from "@/components/landingPage/Footer";
 import Navbar from "@/components/landingPage/Navbar";
+import Modal from "@/components/ui/Modal";
+import ProductShowcaseCard from "@/components/ui/ProductShowcaseCard";
 import { apiErrorMessage, ordersApi, productApi } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import { useAuthStore } from "@/store/auth.store";
 import type { Product } from "@/lib/types";
+
+const getMatchingVariant = (product: Product | null, color: string | null) => {
+  if (!product || !color) {
+    return null;
+  }
+
+  return (
+    product.colorVariants.find(
+      (variant) => variant.color.toLowerCase() === color.toLowerCase()
+    ) ?? null
+  );
+};
 
 export default function ProductDetailPage() {
   const params = useParams<{ id: string }>();
@@ -20,9 +42,11 @@ export default function ProductDetailPage() {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [orderModalOpen, setOrderModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [contactPhone, setContactPhone] = useState(user?.phone ?? "");
   const [shippingAddress, setShippingAddress] = useState(user?.address ?? "");
   const [notes, setNotes] = useState("");
@@ -44,6 +68,7 @@ export default function ProductDetailPage() {
         setProduct(response.product);
         setRelatedProducts(response.relatedProducts);
         setSelectedImage(0);
+        setSelectedColor(response.product.colors[0] ?? null);
       } catch (requestError) {
         if (!isMounted) {
           return;
@@ -64,10 +89,49 @@ export default function ProductDetailPage() {
     };
   }, [params.id]);
 
+  const availableColors = product?.colors ?? [];
+  const matchingVariant = getMatchingVariant(product, selectedColor);
+  const hasVariantInventory = (product?.colorVariants.length ?? 0) > 0;
+  const availableUnits = hasVariantInventory
+    ? matchingVariant?.stock ?? 0
+    : product?.stock ?? 0;
+  const canPlaceOrder = Boolean(product && product.stock > 0);
+  const colorSelectionRequired = availableColors.length > 0;
+  const orderTotal = product ? product.productPrice * quantity : 0;
+
+  const resetOrderForm = () => {
+    setQuantity(1);
+    setNotes("");
+    setError(null);
+    setSuccessMessage(null);
+    setContactPhone(user?.phone ?? "");
+    setShippingAddress(user?.address ?? "");
+    setSelectedColor(product?.colors[0] ?? null);
+  };
+
+  const openOrderModal = () => {
+    if (!product) {
+      return;
+    }
+
+    resetOrderForm();
+    setOrderModalOpen(true);
+  };
+
+  const closeOrderModal = () => {
+    setOrderModalOpen(false);
+    setSaving(false);
+  };
+
   const handleOrder = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!product) {
+      return;
+    }
+
+    if (colorSelectionRequired && !selectedColor) {
+      setError("Choose a color before placing your order.");
       return;
     }
 
@@ -80,6 +144,7 @@ export default function ProductDetailPage() {
         items: [
           {
             productId: product.id,
+            selectedColor: selectedColor ?? undefined,
             quantity,
           },
         ],
@@ -89,6 +154,31 @@ export default function ProductDetailPage() {
       });
 
       setSuccessMessage("Your order has been placed successfully.");
+      setProduct((currentProduct) => {
+        if (!currentProduct) {
+          return currentProduct;
+        }
+
+        if (hasVariantInventory && selectedColor) {
+          const nextVariants = currentProduct.colorVariants.map((variant) =>
+            variant.color.toLowerCase() === selectedColor.toLowerCase()
+              ? { ...variant, stock: Math.max(0, variant.stock - quantity) }
+              : variant
+          );
+
+          return {
+            ...currentProduct,
+            colorVariants: nextVariants,
+            colors: nextVariants.map((variant) => variant.color),
+            stock: Math.max(0, currentProduct.stock - quantity),
+          };
+        }
+
+        return {
+          ...currentProduct,
+          stock: Math.max(0, currentProduct.stock - quantity),
+        };
+      });
       setQuantity(1);
       setNotes("");
     } catch (requestError) {
@@ -124,7 +214,7 @@ export default function ProductDetailPage() {
           <>
             <div className="mt-8 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
               <div className="rounded-[32px] border border-black/8 bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
-                <div className="relative flex min-h-[460px] items-center justify-center overflow-hidden rounded-[28px] bg-gradient-to-br from-stone-100 via-white to-stone-200">
+                <div className="relative flex min-h-[460px] items-center justify-center overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_top,_rgba(196,166,122,0.18),_transparent_42%),linear-gradient(135deg,#faf6ef_0%,#efe8dd_100%)]">
                   {product.productImages[selectedImage]?.url ? (
                     <Image
                       src={product.productImages[selectedImage].url}
@@ -167,7 +257,7 @@ export default function ProductDetailPage() {
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
                     {product.productCategory}
                   </p>
-                  <h1 className="mt-3 text-4xl font-semibold text-slate-950">
+                  <h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl font-semibold tracking-[-0.03em] text-slate-950">
                     {product.productName}
                   </h1>
                   <p className="mt-4 text-base leading-8 text-slate-500">
@@ -189,135 +279,153 @@ export default function ProductDetailPage() {
                         ? `${product.stock} units available`
                         : "Currently out of stock"}
                     </span>
+                    <span className="rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold text-stone-700">
+                      {hasVariantInventory
+                        ? `${product.colorVariants.length} tracked colors`
+                        : availableColors.length > 0
+                          ? `${availableColors.length} selectable colors`
+                          : "Single inventory pool"}
+                    </span>
                   </div>
+
+                  {availableColors.length > 0 ? (
+                    <div className="mt-8">
+                      <div className="flex items-center justify-between gap-4">
+                        <p className="text-sm font-semibold text-slate-900">
+                          Choose a color
+                        </p>
+                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                          {selectedColor
+                            ? hasVariantInventory
+                              ? `${availableUnits} units in ${selectedColor}`
+                              : `${product.stock} shared units available`
+                            : "Select a color"}
+                        </p>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-3">
+                        {availableColors.map((color) => {
+                          const variant = getMatchingVariant(product, color);
+                          const isSelected = selectedColor === color;
+                          const variantStock = variant?.stock ?? product.stock;
+                          const isSoldOut = hasVariantInventory && variantStock <= 0;
+
+                          return (
+                            <button
+                              key={color}
+                              type="button"
+                              onClick={() => setSelectedColor(color)}
+                              className={`rounded-2xl border px-4 py-3 text-left transition-colors ${
+                                isSelected
+                                  ? "border-slate-950 bg-slate-950 text-white"
+                                  : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-950"
+                              }`}
+                            >
+                              <p className="text-sm font-semibold">{color}</p>
+                              <p
+                                className={`mt-1 text-xs ${
+                                  isSelected ? "text-white/70" : "text-slate-500"
+                                }`}
+                              >
+                                {hasVariantInventory
+                                  ? isSoldOut
+                                    ? "Out of stock"
+                                    : `${variantStock} units`
+                                  : "Uses shared stock"}
+                              </p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
 
-                <div className="rounded-[32px] border border-black/8 bg-white p-8 shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white">
-                      <FiShoppingBag />
+                <div className="overflow-hidden rounded-[32px] border border-black/8 bg-[linear-gradient(135deg,#0f172a_0%,#1f2937_100%)] text-white shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
+                  <div className="grid gap-6 p-8">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">
+                          Ready to order
+                        </p>
+                        <h2 className="mt-3 text-3xl font-semibold">
+                          Checkout this pair directly
+                        </h2>
+                        <p className="mt-3 max-w-xl text-sm leading-7 text-white/70">
+                          Select your preferred color, confirm delivery details, and place the order from a focused checkout form.
+                        </p>
+                      </div>
+                      <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-white/10">
+                        <FiShoppingBag className="text-xl" />
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="text-2xl font-semibold text-slate-950">
-                        Place your order
-                      </h2>
-                      <p className="mt-1 text-sm text-slate-500">
-                        Direct checkout for signed-in customer accounts.
-                      </p>
-                    </div>
-                  </div>
 
-                  {!isAuthenticated ? (
-                    <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
-                      Sign in first to place an order for this product.
-                      <div className="mt-3">
-                        <Link
-                          href={`/login?next=${encodeURIComponent(`/products/${product.id}`)}`}
-                          className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2.5 font-semibold text-white"
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div className="rounded-[24px] border border-white/10 bg-white/5 p-4">
+                        <FiPackage className="text-lg text-white/80" />
+                        <p className="mt-4 text-sm font-semibold">Inventory aware</p>
+                        <p className="mt-2 text-xs leading-6 text-white/65">
+                          Orders respect the stock available for the selected color.
+                        </p>
+                      </div>
+                      <div className="rounded-[24px] border border-white/10 bg-white/5 p-4">
+                        <FiTruck className="text-lg text-white/80" />
+                        <p className="mt-4 text-sm font-semibold">Fast fulfillment</p>
+                        <p className="mt-2 text-xs leading-6 text-white/65">
+                          Shipping details are collected in one clean confirmation step.
+                        </p>
+                      </div>
+                      <div className="rounded-[24px] border border-white/10 bg-white/5 p-4">
+                        <FiCheckCircle className="text-lg text-white/80" />
+                        <p className="mt-4 text-sm font-semibold">Tracked selection</p>
+                        <p className="mt-2 text-xs leading-6 text-white/65">
+                          The chosen color is now saved with each order for operations visibility.
+                        </p>
+                      </div>
+                    </div>
+
+                    {!isAuthenticated ? (
+                      <div className="rounded-[24px] border border-white/10 bg-white/5 p-5 text-sm text-white/75">
+                        Sign in with a customer account to place this order.
+                        <div className="mt-4">
+                          <Link
+                            href={`/login?next=${encodeURIComponent(`/products/${product.id}`)}`}
+                            className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 font-semibold text-slate-950"
+                          >
+                            Sign in to order
+                            <FiArrowRight />
+                          </Link>
+                        </div>
+                      </div>
+                    ) : user?.role !== "customer" ? (
+                      <div className="rounded-[24px] border border-amber-300/30 bg-amber-400/10 p-5 text-sm text-amber-100">
+                        This checkout flow is reserved for customer accounts. Staff can still browse products here and manage catalog or order operations from the dashboard.
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-4 rounded-[24px] border border-white/10 bg-white/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-sm font-semibold">
+                            {selectedColor
+                              ? `Ordering ${product.productName} in ${selectedColor}`
+                              : `Ordering ${product.productName}`}
+                          </p>
+                          <p className="mt-2 text-xs uppercase tracking-[0.18em] text-white/60">
+                            {hasVariantInventory && selectedColor
+                              ? `${availableUnits} units currently available`
+                              : `${product.stock} units in stock`}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={openOrderModal}
+                          disabled={!canPlaceOrder}
+                          className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-slate-950 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          Sign in to order
+                          Place order
                           <FiArrowRight />
-                        </Link>
+                        </button>
                       </div>
-                    </div>
-                  ) : user?.role !== "customer" ? (
-                    <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-700">
-                      This checkout flow is reserved for customer accounts. Your
-                      current role can still browse the storefront and manage
-                      operations from the dashboard.
-                    </div>
-                  ) : (
-                    <form onSubmit={handleOrder} className="mt-6 space-y-4">
-                      <div className="grid gap-4 sm:grid-cols-[140px_1fr]">
-                        <div>
-                          <label className="mb-2 block text-sm font-semibold text-slate-700">
-                            Quantity
-                          </label>
-                          <input
-                            type="number"
-                            min="1"
-                            max={Math.max(1, product.stock)}
-                            value={quantity}
-                            onChange={(event) =>
-                              setQuantity(
-                                Math.min(
-                                  Math.max(1, Number(event.target.value) || 1),
-                                  Math.max(1, product.stock)
-                                )
-                              )
-                            }
-                            className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="mb-2 block text-sm font-semibold text-slate-700">
-                            Contact phone
-                          </label>
-                          <input
-                            type="tel"
-                            value={contactPhone}
-                            onChange={(event) => setContactPhone(event.target.value)}
-                            className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="mb-2 block text-sm font-semibold text-slate-700">
-                          Shipping address
-                        </label>
-                        <textarea
-                          value={shippingAddress}
-                          onChange={(event) => setShippingAddress(event.target.value)}
-                          rows={4}
-                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm outline-none"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="mb-2 block text-sm font-semibold text-slate-700">
-                          Order notes
-                        </label>
-                        <textarea
-                          value={notes}
-                          onChange={(event) => setNotes(event.target.value)}
-                          rows={3}
-                          placeholder="Optional delivery notes"
-                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm outline-none"
-                        />
-                      </div>
-
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
-                        Estimated total:{" "}
-                        <span className="font-semibold text-slate-950">
-                          {formatCurrency(product.productPrice * quantity)}
-                        </span>
-                      </div>
-
-                      {(error || successMessage) && (
-                        <div
-                          className={`flex items-start gap-3 rounded-2xl px-4 py-3 text-sm ${
-                            error
-                              ? "border border-red-200 bg-red-50 text-red-700"
-                              : "border border-emerald-200 bg-emerald-50 text-emerald-700"
-                          }`}
-                        >
-                          <FiAlertCircle className="mt-0.5 shrink-0" />
-                          <p>{error ?? successMessage}</p>
-                        </div>
-                      )}
-
-                      <button
-                        type="submit"
-                        disabled={saving || product.stock <= 0}
-                        className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {saving ? "Placing order..." : "Place order"}
-                        {!saving && <FiArrowRight />}
-                      </button>
-                    </form>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -337,33 +445,7 @@ export default function ProductDetailPage() {
 
                 <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
                   {relatedProducts.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={`/products/${item.id}`}
-                      className="overflow-hidden rounded-[24px] border border-slate-200 transition-transform hover:-translate-y-1"
-                    >
-                      <div className="relative h-48 bg-gradient-to-br from-stone-100 via-white to-stone-200">
-                        {item.productImages[0]?.url ? (
-                          <Image
-                            src={item.productImages[0].url}
-                            alt={item.productName}
-                            fill
-                            className="object-contain p-4"
-                          />
-                        ) : null}
-                      </div>
-                      <div className="p-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                          {item.productCategory}
-                        </p>
-                        <h3 className="mt-2 text-lg font-semibold text-slate-950">
-                          {item.productName}
-                        </h3>
-                        <p className="mt-3 text-sm font-semibold text-slate-800">
-                          {formatCurrency(item.productPrice)}
-                        </p>
-                      </div>
-                    </Link>
+                    <ProductShowcaseCard key={item.id} product={item} compact />
                   ))}
                 </div>
               </div>
@@ -373,6 +455,189 @@ export default function ProductDetailPage() {
       </section>
 
       <Footer />
+
+      <Modal
+        open={orderModalOpen}
+        onClose={closeOrderModal}
+        title="Complete your order"
+        description="Confirm the color, quantity, and delivery details for this purchase."
+      >
+        {product ? (
+          <form onSubmit={handleOrder} className="space-y-5">
+            <div className="rounded-[26px] border border-slate-200 bg-slate-50 p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Product
+                  </p>
+                  <h3 className="mt-2 text-2xl font-semibold text-slate-950">
+                    {product.productName}
+                  </h3>
+                  <p className="mt-2 text-sm text-slate-500">
+                    {formatCurrency(product.productPrice)} per unit
+                  </p>
+                </div>
+                <div className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-slate-600">
+                  {product.stock} total units
+                </div>
+              </div>
+            </div>
+
+            {availableColors.length > 0 ? (
+              <div>
+                <label className="mb-3 block text-sm font-semibold text-slate-700">
+                  Color
+                </label>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {availableColors.map((color) => {
+                    const variant = getMatchingVariant(product, color);
+                    const colorStock = hasVariantInventory
+                      ? variant?.stock ?? 0
+                      : product.stock;
+                    const isSelected = selectedColor === color;
+
+                    return (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => setSelectedColor(color)}
+                        className={`rounded-[22px] border px-4 py-4 text-left transition-colors ${
+                          isSelected
+                            ? "border-slate-950 bg-slate-950 text-white"
+                            : "border-slate-200 bg-white text-slate-700 hover:border-slate-950"
+                        }`}
+                      >
+                        <p className="text-sm font-semibold">{color}</p>
+                        <p
+                          className={`mt-2 text-xs ${
+                            isSelected ? "text-white/70" : "text-slate-500"
+                          }`}
+                        >
+                          {hasVariantInventory
+                            ? `${colorStock} units available`
+                            : "Uses shared stock"}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max={Math.max(1, availableUnits)}
+                  value={quantity}
+                  onChange={(event) =>
+                    setQuantity(
+                      Math.min(
+                        Math.max(1, Number(event.target.value) || 1),
+                        Math.max(1, availableUnits)
+                      )
+                    )
+                  }
+                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                  Contact phone
+                </label>
+                <input
+                  type="tel"
+                  value={contactPhone}
+                  onChange={(event) => setContactPhone(event.target.value)}
+                  placeholder="+92 300 1234567"
+                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Shipping address
+              </label>
+              <textarea
+                value={shippingAddress}
+                onChange={(event) => setShippingAddress(event.target.value)}
+                rows={4}
+                placeholder="House number, street, area, city"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Order notes
+              </label>
+              <textarea
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                rows={3}
+                placeholder="Optional delivery notes"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm outline-none"
+              />
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+              <div className="flex items-center justify-between gap-4">
+                <span>Estimated total</span>
+                <span className="text-lg font-semibold text-slate-950">
+                  {formatCurrency(orderTotal)}
+                </span>
+              </div>
+              <p className="mt-2 text-xs text-slate-500">
+                {selectedColor
+                  ? `Selected color: ${selectedColor}`
+                  : "Choose a color to finish checkout."}
+              </p>
+            </div>
+
+            {(error || successMessage) && (
+              <div
+                className={`flex items-start gap-3 rounded-2xl px-4 py-3 text-sm ${
+                  error
+                    ? "border border-red-200 bg-red-50 text-red-700"
+                    : "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                }`}
+              >
+                <FiAlertCircle className="mt-0.5 shrink-0" />
+                <p>{error ?? successMessage}</p>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={closeOrderModal}
+                className="rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={
+                  saving ||
+                  product.stock <= 0 ||
+                  (colorSelectionRequired && !selectedColor) ||
+                  (hasVariantInventory && availableUnits <= 0)
+                }
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {saving ? "Placing order..." : "Confirm order"}
+                {!saving && <FiArrowRight />}
+              </button>
+            </div>
+          </form>
+        ) : null}
+      </Modal>
     </main>
   );
 }

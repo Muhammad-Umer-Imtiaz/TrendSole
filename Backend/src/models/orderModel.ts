@@ -12,6 +12,7 @@ export interface IOrderItem {
   productName: string;
   productImage?: string;
   productCategory: string;
+  selectedColor?: string;
   quantity: number;
   unitPrice: number;
   lineTotal: number;
@@ -55,6 +56,11 @@ const orderItemSchema = new Schema<IOrderItem>(
       type: String,
       required: true,
       trim: true,
+    },
+    selectedColor: {
+      type: String,
+      trim: true,
+      default: "",
     },
     quantity: {
       type: Number,

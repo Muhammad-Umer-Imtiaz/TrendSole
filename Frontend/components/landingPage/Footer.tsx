@@ -8,7 +8,7 @@ import {
 
 export default function Footer() {
   return (
-    <footer className="mt-20 bg-black text-white">
+    <footer id="contact" className="mt-20 bg-black text-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 md:grid-cols-4">
         <div>
           <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold uppercase tracking-[0.14em]">

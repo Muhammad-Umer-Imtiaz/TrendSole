@@ -31,6 +31,7 @@ interface AuthState {
   error: string | null;
   signup: (payload: SignupPayload) => Promise<LoginResponse>;
   login: (payload: LoginPayload) => Promise<LoginResponse>;
+  applyAuthSession: (response: LoginResponse) => void;
   logout: (options?: LogoutOptions) => Promise<void>;
   setUser: (user: AuthUser | null) => void;
   setPermissions: (permissions: Permission[]) => void;
@@ -130,6 +131,19 @@ export const useAuthStore = create<AuthState>()(
 
           throw error;
         }
+      },
+
+      applyAuthSession: (response) => {
+        set({
+          user: response.user,
+          token: response.token,
+          permissions: response.permissions,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        });
+
+        setAuthCookie(response.token, response.user.role);
       },
 
       logout: async (options = {}) => {

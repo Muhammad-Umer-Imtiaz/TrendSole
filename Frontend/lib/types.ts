@@ -69,6 +69,11 @@ export interface ProductImage {
   publicId: string;
 }
 
+export interface ProductColorVariant {
+  color: string;
+  stock: number;
+}
+
 export interface Product {
   id: string;
   productName: string;
@@ -76,8 +81,13 @@ export interface Product {
   productDescription: string;
   productImages: ProductImage[];
   productCategory: string;
+  colors: string[];
+  colorVariants: ProductColorVariant[];
   stock: number;
   isActive: boolean;
+  isFeatured: boolean;
+  isNewArrival: boolean;
+  isBestSeller: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -89,7 +99,11 @@ export interface ProductListParams {
   minPrice?: number;
   maxPrice?: number;
   category?: string[];
+  colors?: string[];
   includeInactive?: boolean;
+  featured?: boolean;
+  newArrival?: boolean;
+  bestSeller?: boolean;
 }
 
 export interface ProductFormValues {
@@ -97,8 +111,13 @@ export interface ProductFormValues {
   productPrice: string;
   productDescription: string;
   productCategory: string;
+  colors: string[];
+  colorVariants: ProductColorVariant[];
   stock: string;
   isActive: boolean;
+  isFeatured: boolean;
+  isNewArrival: boolean;
+  isBestSeller: boolean;
 }
 
 export interface Category {
@@ -148,6 +167,7 @@ export interface OrderItem {
   productName: string;
   productImage?: string;
   productCategory: string;
+  selectedColor?: string;
   quantity: number;
   unitPrice: number;
   lineTotal: number;
@@ -220,6 +240,7 @@ export interface InventoryItem {
   productName: string;
   productCategory: string;
   stock: number;
+  colorVariants?: ProductColorVariant[];
   isActive: boolean;
   updatedAt: string;
 }
@@ -250,6 +271,7 @@ export interface PaginatedResult<T> {
 export interface CreateOrderPayload {
   items: Array<{
     productId: string;
+    selectedColor?: string;
     quantity: number;
   }>;
   contactPhone: string;

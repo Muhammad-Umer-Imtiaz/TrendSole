@@ -1,14 +1,12 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { FiArrowRight, FiFilter, FiSearch, FiSliders } from "react-icons/fi";
+import { FiFilter, FiSearch, FiSliders } from "react-icons/fi";
 import Footer from "@/components/landingPage/Footer";
 import Navbar from "@/components/landingPage/Navbar";
 import PaginationControls from "@/components/ui/PaginationControls";
+import ProductShowcaseCard from "@/components/ui/ProductShowcaseCard";
 import { apiErrorMessage, categoriesApi, productApi } from "@/lib/api";
-import { formatCurrency } from "@/lib/format";
 import type { Category, PaginationMeta, Product } from "@/lib/types";
 
 const DEFAULT_PAGINATION: PaginationMeta = {
@@ -159,7 +157,7 @@ export default function ProductsPage() {
                       setSearchTerm(event.target.value);
                       setPage(1);
                     }}
-                    placeholder="Search sneakers"
+                    placeholder="Search sneakers, colors, or categories"
                     className="h-12 w-full bg-transparent pl-3 text-sm outline-none"
                   />
                 </div>
@@ -178,7 +176,7 @@ export default function ProductsPage() {
                       setMinPrice(event.target.value);
                       setPage(1);
                     }}
-                    placeholder="Min"
+                    placeholder="Minimum PKR"
                     className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none"
                   />
                   <input
@@ -189,7 +187,7 @@ export default function ProductsPage() {
                       setMaxPrice(event.target.value);
                       setPage(1);
                     }}
-                    placeholder="Max"
+                    placeholder="Maximum PKR"
                     className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none"
                   />
                 </div>
@@ -277,58 +275,11 @@ export default function ProductsPage() {
                 <>
                   <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                     {products.map((product) => (
-                      <article
+                      <ProductShowcaseCard
                         key={product.id}
-                        className="overflow-hidden rounded-[24px] border border-slate-200 bg-white"
-                      >
-                        <div className="relative h-64 bg-gradient-to-br from-stone-100 via-white to-stone-200">
-                          {product.productImages[0]?.url ? (
-                            <Image
-                              src={product.productImages[0].url}
-                              alt={product.productName}
-                              fill
-                              className="object-contain p-6"
-                            />
-                          ) : (
-                            <div className="flex h-full items-center justify-center text-sm text-slate-400">
-                              No image available
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="space-y-4 p-5">
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-                                {product.productCategory}
-                              </p>
-                              <h3 className="mt-2 text-xl font-semibold text-slate-950">
-                                {product.productName}
-                              </h3>
-                            </div>
-                            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                              {product.stock > 0 ? `${product.stock} in stock` : "Sold out"}
-                            </span>
-                          </div>
-
-                          <p className="line-clamp-3 text-sm leading-7 text-slate-500">
-                            {product.productDescription}
-                          </p>
-
-                          <div className="flex items-center justify-between gap-4">
-                            <p className="text-2xl font-semibold text-slate-950">
-                              {formatCurrency(product.productPrice)}
-                            </p>
-                            <Link
-                              href={`/products/${product.id}`}
-                              className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-                            >
-                              View details
-                              <FiArrowRight />
-                            </Link>
-                          </div>
-                        </div>
-                      </article>
+                        product={product}
+                        compact
+                      />
                     ))}
                   </div>
 

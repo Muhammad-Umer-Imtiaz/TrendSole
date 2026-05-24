@@ -16,6 +16,9 @@ const parsePositiveNumber = (value: unknown, fallback: number) => {
   return parsed;
 };
 
+const colorsMatch = (firstColor: string, secondColor: string) =>
+  firstColor.trim().toLowerCase() === secondColor.trim().toLowerCase();
+
 const serializeOrder = (order: {
   _id: unknown;
   orderNumber: string;
@@ -33,6 +36,7 @@ const serializeOrder = (order: {
     productName: string;
     productImage?: string;
     productCategory: string;
+    selectedColor?: string;
     quantity: number;
     unitPrice: number;
     lineTotal: number;
@@ -56,6 +60,7 @@ const serializeOrder = (order: {
     productName: item.productName,
     productImage: item.productImage ?? "",
     productCategory: item.productCategory,
+    selectedColor: item.selectedColor || undefined,
     quantity: item.quantity,
     unitPrice: item.unitPrice,
     lineTotal: item.lineTotal,
@@ -102,24 +107,81 @@ export const createOrder = catchAsync(
         throw new AppError("Unable to build the requested order", 400);
       }
 
-      if (product.stock < item.quantity) {
-        throw new AppError(
-          `${product.productName} only has ${product.stock} units available`,
-          400
+      const selectedColor = item.selectedColor?.trim();
+      const hasVariantInventory = product.colorVariants.length > 0;
+      const hasSelectableColors = product.colors.length > 0;
+      let matchedVariant:
+        | (typeof product.colorVariants extends Array<infer Variant> ? Variant : never)
+        | undefined;
+
+      if (hasVariantInventory) {
+        if (!selectedColor) {
+          throw new AppError(
+            `Select a color for ${product.productName} before placing the order`,
+            400
+          );
+        }
+
+        matchedVariant = product.colorVariants.find((variant) =>
+          colorsMatch(variant.color, selectedColor)
         );
+
+        if (!matchedVariant) {
+          throw new AppError(
+            `${selectedColor} is not available for ${product.productName}`,
+            400
+          );
+        }
+
+        if (matchedVariant.stock < item.quantity) {
+          throw new AppError(
+            `${product.productName} in ${matchedVariant.color} only has ${matchedVariant.stock} units available`,
+            400
+          );
+        }
+      } else {
+        if (hasSelectableColors) {
+          if (!selectedColor) {
+            throw new AppError(
+              `Select a color for ${product.productName} before placing the order`,
+              400
+            );
+          }
+
+          const colorExists = product.colors.some((color) =>
+            colorsMatch(color, selectedColor)
+          );
+
+          if (!colorExists) {
+            throw new AppError(
+              `${selectedColor} is not available for ${product.productName}`,
+              400
+            );
+          }
+        }
+
+        if (product.stock < item.quantity) {
+          throw new AppError(
+            `${product.productName} only has ${product.stock} units available`,
+            400
+          );
+        }
       }
 
       return {
         product,
+        selectedColor,
+        matchedVariant,
         quantity: item.quantity,
       };
     });
 
-    const orderItems = items.map(({ product, quantity }) => ({
+    const orderItems = items.map(({ product, quantity, selectedColor }) => ({
       productId: product._id,
       productName: product.productName,
       productImage: product.productImages[0]?.url ?? "",
       productCategory: product.productCategory,
+      selectedColor,
       quantity,
       unitPrice: product.productPrice,
       lineTotal: product.productPrice * quantity,
@@ -128,8 +190,18 @@ export const createOrder = catchAsync(
     const orderNumber = `TS-${Date.now().toString().slice(-8)}`;
 
     await Promise.all(
-      items.map(async ({ product, quantity }) => {
-        product.stock -= quantity;
+      items.map(async ({ product, quantity, matchedVariant }) => {
+        if (matchedVariant) {
+          matchedVariant.stock -= quantity;
+          product.stock = product.colorVariants.reduce(
+            (sum, variant) => sum + variant.stock,
+            0
+          );
+          product.markModified("colorVariants");
+        } else {
+          product.stock -= quantity;
+        }
+
         await product.save();
       })
     );

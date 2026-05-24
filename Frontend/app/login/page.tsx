@@ -4,7 +4,8 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FiAlertCircle, FiArrowRight, FiLock } from "react-icons/fi";
+import { FiAlertCircle, FiArrowRight, FiShield } from "react-icons/fi";
+import AuthShell from "@/components/auth/AuthShell";
 import { loginFormSchema } from "@/lib/validations/auth";
 import { getDefaultRouteForRole, useAuthStore } from "@/store/auth.store";
 
@@ -72,48 +73,30 @@ function LoginPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f3ee] px-6 py-10">
-      <div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-6xl overflow-hidden rounded-[32px] border border-black/8 bg-white lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="hidden border-r border-black/8 bg-slate-950 px-10 py-12 text-white lg:flex lg:flex-col">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-white/65">
-              Trend Sole
-            </p>
-            <h1 className="mt-5 text-4xl font-semibold leading-tight">
-              One sign-in for storefront shoppers and your operations team.
-            </h1>
-            <p className="mt-4 max-w-md text-base leading-8 text-white/70">
-              Customers land in the storefront, while staff, managers, and admins
-              are routed into the dashboard with permission-aware access.
-            </p>
-          </div>
-
-          <div className="mt-auto rounded-[28px] border border-white/10 bg-white/5 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10">
-              <FiLock />
-            </div>
-            <p className="mt-4 text-lg font-semibold">JWT-protected role-aware access</p>
-            <p className="mt-2 text-sm leading-7 text-white/65">
-              Sign in with your Trend Sole account to continue shopping,
-              manage your profile, or work inside the dashboard.
-            </p>
-          </div>
+    <AuthShell
+      eyebrow="Trend Sole Login"
+      title="Sign in to continue"
+      description="Customers return to the storefront, while staff and admins are routed to the dashboard with their assigned access."
+      sideTitle="One sign-in flow for customers, staff, managers, and admins."
+      sideDescription="Keep shopping and operations in one place with permission-aware authentication backed by your API."
+      sideCardTitle="Protected account access"
+      sideCardDescription="Use your Trend Sole credentials to manage your profile, review orders, or work in the operations dashboard."
+      sideIcon={FiShield}
+      footer={
+        <div className="flex flex-wrap items-center gap-4 text-sm">
+          <Link href="/signup" className="font-semibold text-slate-950 hover:text-slate-700">
+            Create customer account
+          </Link>
+          <Link
+            href="/forgot-password"
+            className="font-semibold text-slate-600 hover:text-slate-950"
+          >
+            Forgot password?
+          </Link>
         </div>
-
-        <div className="flex items-center px-6 py-10 sm:px-10 lg:px-14">
-          <div className="mx-auto w-full max-w-xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-slate-500">
-              Trend Sole Login
-            </p>
-            <h2 className="mt-4 text-4xl font-semibold text-slate-950">
-              Sign in to continue
-            </h2>
-            <p className="mt-3 text-base leading-7 text-slate-500">
-              Customers go straight to the storefront. Team accounts open the
-              dashboard based on their assigned role and permissions.
-            </p>
-
-            <form onSubmit={handleSubmit} className="mt-10 space-y-6">
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Email address
@@ -157,26 +140,10 @@ function LoginPageContent() {
               </button>
             </form>
 
-            <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-              New here? Customer accounts can sign up directly. Team access still
-              depends on the role and permissions assigned from the backend.
-            </div>
-
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <Link
-                href="/signup"
-                className="text-sm font-semibold text-slate-950 hover:text-slate-700"
-              >
-                Create customer account
-              </Link>
-              <Link href="/" className="text-sm font-semibold text-slate-700 hover:text-slate-950">
-                Back to storefront
-              </Link>
-            </div>
-          </div>
-        </div>
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+        New here? Customer accounts can sign up directly, while team access remains controlled from the backend.
       </div>
-    </div>
+    </AuthShell>
   );
 }
 

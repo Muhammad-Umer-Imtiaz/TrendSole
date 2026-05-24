@@ -5,14 +5,24 @@ export interface IProductImage {
   publicId: string;
 }
 
+export interface IProductColorVariant {
+  color: string;
+  stock: number;
+}
+
 export interface IProduct extends Document {
   productName: string;
   productPrice: number;
   productDescription: string;
   productImages: IProductImage[];
   productCategory: string;
+  colors: string[];
+  colorVariants: IProductColorVariant[];
   stock: number;
   isActive: boolean;
+  isFeatured: boolean;
+  isNewArrival: boolean;
+  isBestSeller: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,6 +38,25 @@ const productImageSchema = new Schema<IProductImage>(
       type: String,
       required: true,
       trim: true,
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
+const productColorVariantSchema = new Schema<IProductColorVariant>(
+  {
+    color: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    stock: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
     },
   },
   {
@@ -67,6 +96,14 @@ const productSchema: Schema<IProduct> = new Schema(
       required: true,
       trim: true,
     },
+    colors: {
+      type: [String],
+      default: [],
+    },
+    colorVariants: {
+      type: [productColorVariantSchema],
+      default: [],
+    },
     stock: {
       type: Number,
       required: true,
@@ -76,6 +113,18 @@ const productSchema: Schema<IProduct> = new Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
+    isNewArrival: {
+      type: Boolean,
+      default: false,
+    },
+    isBestSeller: {
+      type: Boolean,
+      default: false,
     },
   },
   {

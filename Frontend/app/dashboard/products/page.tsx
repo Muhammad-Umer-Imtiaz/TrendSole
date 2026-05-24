@@ -2,7 +2,15 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { FiEdit2, FiPlus, FiTrash2, FiX } from "react-icons/fi";
+import {
+  FiEdit2,
+  FiPlus,
+  FiStar,
+  FiTag,
+  FiTrash2,
+  FiX,
+  FiZap,
+} from "react-icons/fi";
 import AuthGuard from "@/components/auth/AuthGuard";
 import Card from "@/components/ui/Card";
 import Modal from "@/components/ui/Modal";
@@ -19,8 +27,13 @@ const emptyProductForm: ProductFormValues = {
   productPrice: "",
   productDescription: "",
   productCategory: "",
+  colors: [],
+  colorVariants: [],
   stock: "",
   isActive: true,
+  isFeatured: false,
+  isNewArrival: false,
+  isBestSeller: false,
 };
 
 export default function ProductsPage() {
@@ -36,6 +49,9 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formValues, setFormValues] = useState<ProductFormValues>(emptyProductForm);
   const [files, setFiles] = useState<File[]>([]);
+  const [colorInput, setColorInput] = useState("");
+  const [variantColorInput, setVariantColorInput] = useState("");
+  const [variantStockInput, setVariantStockInput] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
 
   const loadProducts = async () => {
@@ -113,12 +129,18 @@ export default function ProductsPage() {
     setEditingProduct(null);
     setFormValues(emptyProductForm);
     setFiles([]);
+    setColorInput("");
+    setVariantColorInput("");
+    setVariantStockInput("");
   };
 
   const openCreateModal = () => {
     setEditingProduct(null);
     setFormValues(emptyProductForm);
     setFiles([]);
+    setColorInput("");
+    setVariantColorInput("");
+    setVariantStockInput("");
     setModalOpen(true);
   };
 
@@ -129,10 +151,18 @@ export default function ProductsPage() {
       productPrice: String(product.productPrice),
       productDescription: product.productDescription,
       productCategory: product.productCategory,
+      colors: product.colors,
+      colorVariants: product.colorVariants,
       stock: String(product.stock),
       isActive: product.isActive,
+      isFeatured: product.isFeatured,
+      isNewArrival: product.isNewArrival,
+      isBestSeller: product.isBestSeller,
     });
     setFiles([]);
+    setColorInput("");
+    setVariantColorInput("");
+    setVariantStockInput("");
     setModalOpen(true);
   };
 
@@ -144,6 +174,104 @@ export default function ProductsPage() {
       )
     );
   };
+
+  const addColor = () => {
+    const normalizedColor = colorInput.trim();
+
+    if (!normalizedColor) {
+      return;
+    }
+
+    setFormValues((current) => ({
+      ...current,
+      colors: current.colors.some(
+        (color) => color.toLowerCase() === normalizedColor.toLowerCase()
+      )
+        ? current.colors
+        : [...current.colors, normalizedColor],
+    }));
+    setColorInput("");
+  };
+
+  const removeColor = (targetColor: string) => {
+    setFormValues((current) => ({
+      ...current,
+      colors: current.colors.filter((color) => color !== targetColor),
+      colorVariants: current.colorVariants.filter(
+        (variant) => variant.color !== targetColor
+      ),
+    }));
+  };
+
+  const addColorVariant = () => {
+    const normalizedColor = variantColorInput.trim();
+    const parsedStock = Number(variantStockInput);
+
+    if (!normalizedColor || !Number.isFinite(parsedStock) || parsedStock < 0) {
+      return;
+    }
+
+    setFormValues((current) => {
+      const existingIndex = current.colorVariants.findIndex(
+        (variant) => variant.color.toLowerCase() === normalizedColor.toLowerCase()
+      );
+      const nextVariants =
+        existingIndex >= 0
+          ? current.colorVariants.map((variant, index) =>
+              index === existingIndex
+                ? { ...variant, color: normalizedColor, stock: parsedStock }
+                : variant
+            )
+          : [...current.colorVariants, { color: normalizedColor, stock: parsedStock }];
+
+      return {
+        ...current,
+        colors: current.colors.some(
+          (color) => color.toLowerCase() === normalizedColor.toLowerCase()
+        )
+          ? current.colors
+          : [...current.colors, normalizedColor],
+        colorVariants: nextVariants,
+      };
+    });
+
+    setVariantColorInput("");
+    setVariantStockInput("");
+  };
+
+  const updateVariantStock = (targetColor: string, nextStock: string) => {
+    const parsedStock = Number(nextStock);
+
+    setFormValues((current) => ({
+      ...current,
+      colorVariants: current.colorVariants.map((variant) =>
+        variant.color === targetColor
+          ? {
+              ...variant,
+              stock:
+                Number.isFinite(parsedStock) && parsedStock >= 0 ? parsedStock : 0,
+            }
+          : variant
+      ),
+    }));
+  };
+
+  const removeColorVariant = (targetColor: string) => {
+    setFormValues((current) => ({
+      ...current,
+      colors: current.colors.filter((color) => color !== targetColor),
+      colorVariants: current.colorVariants.filter(
+        (variant) => variant.color !== targetColor
+      ),
+    }));
+  };
+
+  const totalVariantStock = formValues.colorVariants.reduce(
+    (sum, variant) => sum + variant.stock,
+    0
+  );
+  const effectiveStock =
+    formValues.colorVariants.length > 0 ? String(totalVariantStock) : formValues.stock;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -206,6 +334,23 @@ export default function ProductsPage() {
           <div>
             <p className="font-semibold text-slate-950">{product.productName}</p>
             <p className="mt-1 text-xs text-slate-500">{product.productCategory}</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {product.isFeatured ? (
+                <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                  Featured
+                </span>
+              ) : null}
+              {product.isNewArrival ? (
+                <span className="rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-semibold text-sky-700">
+                  New
+                </span>
+              ) : null}
+              {product.isBestSeller ? (
+                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                  Best seller
+                </span>
+              ) : null}
+            </div>
           </div>
         </div>
       ),
@@ -218,7 +363,16 @@ export default function ProductsPage() {
     {
       key: "stock",
       header: "Stock",
-      render: (product) => `${product.stock} units`,
+      render: (product) => (
+        <div>
+          <p className="font-semibold text-slate-950">{product.stock} units</p>
+          <p className="mt-1 text-xs text-slate-500">
+            {product.colorVariants.length > 0
+              ? `${product.colorVariants.length} color variants tracked`
+              : "Shared inventory"}
+          </p>
+        </div>
+      ),
     },
     {
       key: "status",
@@ -323,6 +477,7 @@ export default function ProductsPage() {
                       productName: event.target.value,
                     }))
                   }
+                  placeholder="Air Swift Runner"
                   className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-slate-950"
                 />
               </label>
@@ -374,6 +529,7 @@ export default function ProductsPage() {
                       productPrice: event.target.value,
                     }))
                   }
+                  placeholder="14999"
                   className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-slate-950"
                 />
               </label>
@@ -383,16 +539,157 @@ export default function ProductsPage() {
                 <input
                   type="number"
                   min="0"
-                  value={formValues.stock}
+                  value={effectiveStock}
                   onChange={(event) =>
                     setFormValues((current) => ({
                       ...current,
                       stock: event.target.value,
                     }))
                   }
-                  className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-slate-950"
+                  disabled={formValues.colorVariants.length > 0}
+                  placeholder="24"
+                  className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-slate-950 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500"
                 />
+                <p className="text-xs text-slate-500">
+                  {formValues.colorVariants.length > 0
+                    ? "Total stock is calculated automatically from your color variants."
+                    : "Use shared stock when you do not need per-color inventory yet."}
+                </p>
               </label>
+            </div>
+
+            <div className="rounded-[28px] border border-slate-200 bg-slate-50/80 p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Available colors</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Add shopper-facing colors customers can choose on the product page.
+                  </p>
+                </div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-slate-700">
+                  <FiTag />
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                <input
+                  value={colorInput}
+                  onChange={(event) => setColorInput(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      addColor();
+                    }
+                  }}
+                  placeholder="Type a color and press Enter"
+                  className="h-12 flex-1 rounded-2xl border border-slate-200 bg-white px-4 outline-none focus:border-slate-950"
+                />
+                <button
+                  type="button"
+                  onClick={addColor}
+                  className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-950 hover:text-slate-950"
+                >
+                  Add color
+                </button>
+              </div>
+
+              {formValues.colors.length > 0 ? (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {formValues.colors.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => removeColor(color)}
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700"
+                    >
+                      <span>{color}</span>
+                      <FiX className="text-sm" />
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-4 text-xs text-slate-500">
+                  No colors added yet.
+                </p>
+              )}
+            </div>
+
+            <div className="rounded-[28px] border border-slate-200 bg-white p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Inventory by color</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Track stock for each color so customers can only order what is truly available.
+                  </p>
+                </div>
+                <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                  Total {totalVariantStock} units
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-[1fr_160px_auto]">
+                <input
+                  value={variantColorInput}
+                  onChange={(event) => setVariantColorInput(event.target.value)}
+                  placeholder="Color name"
+                  className="h-12 rounded-2xl border border-slate-200 bg-white px-4 outline-none focus:border-slate-950"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  value={variantStockInput}
+                  onChange={(event) => setVariantStockInput(event.target.value)}
+                  placeholder="Units"
+                  className="h-12 rounded-2xl border border-slate-200 bg-white px-4 outline-none focus:border-slate-950"
+                />
+                <button
+                  type="button"
+                  onClick={addColorVariant}
+                  className="inline-flex h-12 items-center justify-center rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                >
+                  Save variant
+                </button>
+              </div>
+
+              {formValues.colorVariants.length > 0 ? (
+                <div className="mt-4 space-y-3">
+                  {formValues.colorVariants.map((variant) => (
+                    <div
+                      key={variant.color}
+                      className="grid gap-3 rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-4 md:grid-cols-[1fr_140px_auto]"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-slate-950">
+                          {variant.color}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          Customer-selectable variant
+                        </p>
+                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        value={variant.stock}
+                        onChange={(event) =>
+                          updateVariantStock(variant.color, event.target.value)
+                        }
+                        className="h-11 rounded-2xl border border-slate-200 bg-white px-4 outline-none focus:border-slate-950"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeColorVariant(variant.color)}
+                        className="inline-flex h-11 items-center justify-center rounded-2xl border border-red-200 px-4 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-4 text-xs text-slate-500">
+                  No per-color inventory yet. Customers will use shared stock until you add variants here.
+                </p>
+              )}
             </div>
 
             <label className="block space-y-2 text-sm font-medium text-slate-700">
@@ -401,11 +698,12 @@ export default function ProductsPage() {
                 rows={5}
                 value={formValues.productDescription}
                 onChange={(event) =>
-                  setFormValues((current) => ({
-                    ...current,
-                    productDescription: event.target.value,
-                  }))
+                    setFormValues((current) => ({
+                      ...current,
+                      productDescription: event.target.value,
+                    }))
                 }
+                placeholder="Describe the silhouette, comfort, materials, and standout details."
                 className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none focus:border-slate-950"
               />
             </label>
@@ -432,6 +730,9 @@ export default function ProductsPage() {
                 }}
                 className="block w-full rounded-2xl border border-dashed border-slate-300 px-4 py-3 text-sm text-slate-500"
               />
+              <p className="text-xs text-slate-500">
+                Upload up to 5 storefront-ready product images.
+              </p>
               {filePreviews.length > 0 ? (
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {filePreviews.map((preview) => (
@@ -496,22 +797,85 @@ export default function ProductsPage() {
               )}
             </label>
 
-            <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3">
-              <input
-                type="checkbox"
-                checked={formValues.isActive}
-                onChange={(event) =>
-                  setFormValues((current) => ({
-                    ...current,
-                    isActive: event.target.checked,
-                  }))
-                }
-                className="h-4 w-4 rounded border-slate-300"
-              />
-              <span className="text-sm font-medium text-slate-700">
-                Product is active
-              </span>
-            </label>
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3">
+                <input
+                  type="checkbox"
+                  checked={formValues.isActive}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      isActive: event.target.checked,
+                    }))
+                  }
+                  className="h-4 w-4 rounded border-slate-300"
+                />
+                <span className="text-sm font-medium text-slate-700">
+                  Product is active
+                </span>
+              </label>
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-900">Homepage placement</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Choose where this product appears across the storefront.
+                </p>
+                <div className="mt-4 space-y-3">
+                  <label className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={formValues.isFeatured}
+                      onChange={(event) =>
+                        setFormValues((current) => ({
+                          ...current,
+                          isFeatured: event.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4 rounded border-slate-300"
+                    />
+                    <span className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                      <FiStar className="text-amber-500" />
+                      Featured product
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={formValues.isNewArrival}
+                      onChange={(event) =>
+                        setFormValues((current) => ({
+                          ...current,
+                          isNewArrival: event.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4 rounded border-slate-300"
+                    />
+                    <span className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                      <FiZap className="text-sky-500" />
+                      New arrival
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={formValues.isBestSeller}
+                      onChange={(event) =>
+                        setFormValues((current) => ({
+                          ...current,
+                          isBestSeller: event.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4 rounded border-slate-300"
+                    />
+                    <span className="text-sm font-medium text-slate-700">
+                      Best seller
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
 
             <div className="flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end">
               <button

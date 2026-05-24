@@ -1,22 +1,104 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import { FiAlertCircle, FiArrowRight, FiMail, FiRefreshCw } from "react-icons/fi";
+import AuthShell from "@/components/auth/AuthShell";
+import { apiErrorMessage, authApi } from "@/lib/api";
+import { forgotPasswordFormSchema } from "@/lib/validations/auth";
 
 export default function ForgotPasswordPage() {
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    setSuccessMessage(null);
+
+    const validation = forgotPasswordFormSchema.safeParse({ email });
+
+    if (!validation.success) {
+      setError(
+        validation.error.issues[0]?.message ??
+          "Please enter a valid email address."
+      );
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const response = await authApi.forgotPassword(validation.data);
+      setSuccessMessage(response.message);
+    } catch (requestError) {
+      setError(apiErrorMessage(requestError));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f5f3ee] px-6">
-      <div className="w-full max-w-xl rounded-[32px] border border-black/8 bg-white px-8 py-10 text-center">
-        <h1 className="text-3xl font-semibold text-slate-950">Password recovery is handled by your backend</h1>
-        <p className="mt-4 text-sm leading-7 text-slate-500">
-          If your backend supports password recovery, wire this route to that
-          flow. This admin frontend currently focuses on secure JWT sign-in and
-          dashboard access.
-        </p>
-        <Link
-          href="/login"
-          className="mt-8 inline-flex rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white"
+    <AuthShell
+      eyebrow="Password Recovery"
+      title="Reset your password"
+      description="Enter your account email and we will ask the backend to send a reset link to your inbox."
+      sideTitle="Regain access without needing help from the dashboard team."
+      sideDescription="This recovery flow uses the backend reset token endpoint and opens the secure reset page from the email link."
+      sideCardTitle="Email-based recovery"
+      sideCardDescription="If the account exists, the API sends a secure tokenized link that expires automatically."
+      sideIcon={FiRefreshCw}
+      footer={
+        <div className="flex flex-wrap items-center gap-4 text-sm">
+          <Link href="/login" className="font-semibold text-slate-950 hover:text-slate-700">
+            Back to login
+          </Link>
+          <Link href="/otp" className="font-semibold text-slate-600 hover:text-slate-950">
+            Verify OTP instead
+          </Link>
+        </div>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
+            Email address
+          </label>
+          <div className="flex items-center rounded-2xl border border-slate-200 bg-white px-4">
+            <FiMail className="text-slate-400" />
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="you@example.com"
+              className="h-14 w-full bg-transparent pl-3 text-slate-950 outline-none"
+            />
+          </div>
+        </div>
+
+        {(error || successMessage) ? (
+          <div
+            className={`flex items-start gap-3 rounded-2xl px-4 py-3 text-sm ${
+              error
+                ? "border border-red-200 bg-red-50 text-red-700"
+                : "border border-emerald-200 bg-emerald-50 text-emerald-700"
+            }`}
+          >
+            <FiAlertCircle className="mt-0.5 shrink-0" />
+            <p>{error ?? successMessage}</p>
+          </div>
+        ) : null}
+
+        <button
+          type="submit"
+          disabled={submitting}
+          className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
         >
-          Return to login
-        </Link>
-      </div>
-    </div>
+          {submitting ? "Sending reset link..." : "Send reset link"}
+          {!submitting && <FiArrowRight />}
+        </button>
+      </form>
+    </AuthShell>
   );
 }

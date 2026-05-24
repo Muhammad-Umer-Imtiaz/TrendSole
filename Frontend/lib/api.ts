@@ -88,27 +88,54 @@ const normalizePagination = (
   };
 };
 
-const normalizeProduct = (product: Record<string, unknown>): Product => ({
-  id: String(product.id ?? product._id ?? ""),
-  productName: String(product.productName ?? ""),
-  productPrice: Number(product.productPrice ?? 0),
-  productDescription: String(product.productDescription ?? ""),
-  productImages: Array.isArray(product.productImages)
-    ? product.productImages.map((image) => ({
-        url: String((image as { url?: string }).url ?? ""),
-        publicId: String(
-          (image as { publicId?: string; public_id?: string }).publicId ??
-            (image as { publicId?: string; public_id?: string }).public_id ??
-            ""
-        ),
-      }))
-    : [],
-  productCategory: String(product.productCategory ?? ""),
-  stock: Number(product.stock ?? 0),
-  isActive: Boolean(product.isActive ?? false),
-  createdAt: String(product.createdAt ?? new Date().toISOString()),
-  updatedAt: String(product.updatedAt ?? new Date().toISOString()),
-});
+const normalizeProduct = (product: Record<string, unknown>): Product => {
+  const rawColors = Array.isArray(product.colors)
+    ? product.colors.map((color) => String(color))
+    : [];
+  const rawStock = Number(product.stock ?? 0);
+  const colorVariants = Array.isArray(product.colorVariants)
+    ? product.colorVariants
+        .map((variant) => ({
+          color: String((variant as { color?: string }).color ?? "").trim(),
+          stock: Number((variant as { stock?: number }).stock ?? 0),
+        }))
+        .filter((variant) => variant.color.length > 0)
+    : [];
+  const colors =
+    colorVariants.length > 0
+      ? colorVariants.map((variant) => variant.color)
+      : rawColors;
+
+  return {
+    id: String(product.id ?? product._id ?? ""),
+    productName: String(product.productName ?? ""),
+    productPrice: Number(product.productPrice ?? 0),
+    productDescription: String(product.productDescription ?? ""),
+    productImages: Array.isArray(product.productImages)
+      ? product.productImages.map((image) => ({
+          url: String((image as { url?: string }).url ?? ""),
+          publicId: String(
+            (image as { publicId?: string; public_id?: string }).publicId ??
+              (image as { publicId?: string; public_id?: string }).public_id ??
+              ""
+          ),
+        }))
+      : [],
+    productCategory: String(product.productCategory ?? ""),
+    colors,
+    colorVariants,
+    stock:
+      colorVariants.length > 0
+        ? colorVariants.reduce((sum, variant) => sum + variant.stock, 0)
+        : rawStock,
+    isActive: Boolean(product.isActive ?? false),
+    isFeatured: Boolean(product.isFeatured ?? false),
+    isNewArrival: Boolean(product.isNewArrival ?? false),
+    isBestSeller: Boolean(product.isBestSeller ?? false),
+    createdAt: String(product.createdAt ?? new Date().toISOString()),
+    updatedAt: String(product.updatedAt ?? new Date().toISOString()),
+  };
+};
 
 const normalizeOrder = (order: Record<string, unknown>): Order => ({
   id: String(order.id ?? order._id ?? ""),
@@ -162,6 +189,10 @@ const normalizeOrder = (order: Record<string, unknown>): Order => ({
         productCategory: String(
           (item as { productCategory?: string }).productCategory ?? ""
         ),
+        selectedColor:
+          typeof (item as { selectedColor?: string }).selectedColor === "string"
+            ? (item as { selectedColor?: string }).selectedColor
+            : undefined,
         quantity: Number((item as { quantity?: number }).quantity ?? 0),
         unitPrice: Number((item as { unitPrice?: number }).unitPrice ?? 0),
         lineTotal: Number((item as { lineTotal?: number }).lineTotal ?? 0),
@@ -239,14 +270,33 @@ const buildProductFormData = (
   values: ProductFormValues,
   images: File[]
 ) => {
+  const normalizedVariants = values.colorVariants
+    .map((variant) => ({
+      color: variant.color.trim(),
+      stock: Number(variant.stock),
+    }))
+    .filter((variant) => variant.color.length > 0);
+  const resolvedColors =
+    normalizedVariants.length > 0
+      ? normalizedVariants.map((variant) => variant.color)
+      : values.colors.map((color) => color.trim()).filter(Boolean);
+  const resolvedStock =
+    normalizedVariants.length > 0
+      ? normalizedVariants.reduce((sum, variant) => sum + variant.stock, 0)
+      : values.stock;
   const formData = new FormData();
 
   formData.append("productName", values.productName);
   formData.append("productPrice", values.productPrice);
   formData.append("productDescription", values.productDescription);
   formData.append("productCategory", values.productCategory);
-  formData.append("stock", values.stock);
+  formData.append("colors", JSON.stringify(resolvedColors));
+  formData.append("colorVariants", JSON.stringify(normalizedVariants));
+  formData.append("stock", String(resolvedStock));
   formData.append("isActive", String(values.isActive));
+  formData.append("isFeatured", String(values.isFeatured));
+  formData.append("isNewArrival", String(values.isNewArrival));
+  formData.append("isBestSeller", String(values.isBestSeller));
 
   images.forEach((file) => {
     formData.append("productImages", file);
@@ -290,7 +340,13 @@ const buildProductParams = (params?: ProductListParams) => ({
   minPrice: params?.minPrice,
   maxPrice: params?.maxPrice,
   category: params?.category?.filter(Boolean).join(",") || undefined,
+  colors: params?.colors?.filter(Boolean).join(",") || undefined,
   includeInactive: params?.includeInactive ? "true" : undefined,
+  featured: typeof params?.featured === "boolean" ? String(params.featured) : undefined,
+  newArrival:
+    typeof params?.newArrival === "boolean" ? String(params.newArrival) : undefined,
+  bestSeller:
+    typeof params?.bestSeller === "boolean" ? String(params.bestSeller) : undefined,
 });
 
 const parseAxiosMessage = (error: unknown) => {
@@ -326,6 +382,15 @@ const toPaginatedResult = <T>(
 });
 
 export const authApi = {
+  register: (payload: SignupPayload & { role?: string }) =>
+    requestWithFallback<ApiMessageResponse>([
+      {
+        method: "POST",
+        url: "/users/register",
+        data: payload,
+      },
+    ]),
+
   login: (payload: LoginPayload) =>
     requestWithFallback<LoginResponse>([
       {
@@ -417,6 +482,33 @@ export const authApi = {
       {
         method: "PUT",
         url: "/users/me/password",
+        data: payload,
+      },
+    ]),
+
+  forgotPassword: (payload: { email: string }) =>
+    requestWithFallback<ApiMessageResponse>([
+      {
+        method: "POST",
+        url: "/users/forget-password",
+        data: payload,
+      },
+    ]),
+
+  resetPassword: (token: string, payload: { password: string }) =>
+    requestWithFallback<ApiMessageResponse>([
+      {
+        method: "POST",
+        url: `/users/reset-password/${token}`,
+        data: payload,
+      },
+    ]),
+
+  verifyOtp: (payload: { otp: string }) =>
+    requestWithFallback<LoginResponse>([
+      {
+        method: "POST",
+        url: "/users/verifyOtp",
         data: payload,
       },
     ]),
@@ -774,6 +866,12 @@ export const inventoryApi = {
           (item as { productCategory?: string }).productCategory ?? ""
         ),
         stock: Number((item as { stock?: number }).stock ?? 0),
+        colorVariants: Array.isArray((item as { colorVariants?: unknown[] }).colorVariants)
+          ? (item as { colorVariants?: unknown[] }).colorVariants?.map((variant) => ({
+              color: String((variant as { color?: string }).color ?? ""),
+              stock: Number((variant as { stock?: number }).stock ?? 0),
+            }))
+          : [],
         isActive: Boolean((item as { isActive?: boolean }).isActive ?? false),
         updatedAt: String(
           (item as { updatedAt?: string }).updatedAt ?? new Date().toISOString()
@@ -787,6 +885,7 @@ export const inventoryApi = {
         productName: product.productName,
         productCategory: product.productCategory,
         stock: product.stock,
+        colorVariants: product.colorVariants,
         isActive: product.isActive,
         updatedAt: product.updatedAt,
       }));

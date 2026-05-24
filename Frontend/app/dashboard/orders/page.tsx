@@ -134,7 +134,17 @@ export default function OrdersPage() {
     {
       key: "items",
       header: "Items",
-      render: (order) => `${order.itemsCount ?? 0} items`,
+      render: (order) => (
+        <div>
+          <p className="font-medium text-slate-900">{order.itemsCount ?? 0} items</p>
+          {order.items?.slice(0, 2).map((item) => (
+            <p key={`${order.id}-${item.productId}-${item.selectedColor ?? "base"}`} className="mt-1 text-xs text-slate-500">
+              {item.productName}
+              {item.selectedColor ? ` • ${item.selectedColor}` : ""}
+            </p>
+          ))}
+        </div>
+      ),
     },
     {
       key: "total",

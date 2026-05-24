@@ -1,13 +1,21 @@
 "use client";
 
 import { FiArrowLeft, FiArrowRight } from "react-icons/fi";
-import { newArrivals } from "@/lib/landingContent";
+import type { Product } from "@/lib/types";
 import { MotionReveal } from "./MotionReveal";
-import ProductCard from "./ProductCard";
+import ProductShowcaseCard from "../ui/ProductShowcaseCard";
 
-export default function NewArrivals() {
+interface NewArrivalsProps {
+  products: Product[];
+  loading?: boolean;
+}
+
+export default function NewArrivals({
+  products,
+  loading = false,
+}: NewArrivalsProps) {
   return (
-    <section className="mx-auto max-w-7xl px-6 py-20 md:py-24">
+    <section id="new-arrivals" className="mx-auto max-w-7xl px-6 py-20 md:py-24">
       <MotionReveal className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.32em] text-stone-500">
@@ -41,11 +49,31 @@ export default function NewArrivals() {
         </div>
       </MotionReveal>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-        {newArrivals.map((item, index) => (
-          <ProductCard key={item.title} index={index} {...item} />
-        ))}
-      </div>
+      {loading ? (
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-[440px] animate-pulse rounded-[30px] bg-white/80"
+            />
+          ))}
+        </div>
+      ) : products.length === 0 ? (
+        <div className="rounded-[28px] border border-dashed border-black/10 bg-white/70 px-6 py-14 text-center text-sm text-stone-500">
+          New arrivals will show here once you tag products as new arrivals.
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          {products.map((product, index) => (
+            <ProductShowcaseCard
+              key={product.id}
+              product={product}
+              index={index}
+              badge="New Arrival"
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

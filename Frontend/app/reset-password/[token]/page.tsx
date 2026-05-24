@@ -1,21 +1,132 @@
+"use client";
+
 import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+import { FiAlertCircle, FiArrowRight, FiLock, FiRefreshCw } from "react-icons/fi";
+import AuthShell from "@/components/auth/AuthShell";
+import { apiErrorMessage, authApi } from "@/lib/api";
+import { resetPasswordFormSchema } from "@/lib/validations/auth";
 
 export default function ResetPasswordTokenPage() {
+  const params = useParams<{ token: string }>();
+  const router = useRouter();
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    setSuccessMessage(null);
+
+    const validation = resetPasswordFormSchema.safeParse({
+      password,
+      confirmPassword,
+    });
+
+    if (!validation.success) {
+      setError(
+        validation.error.issues[0]?.message ??
+          "Please review your new password."
+      );
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const response = await authApi.resetPassword(params.token, {
+        password: validation.data.password,
+      });
+      setSuccessMessage(response.message);
+      setTimeout(() => {
+        router.replace("/login");
+      }, 1200);
+    } catch (requestError) {
+      setError(apiErrorMessage(requestError));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f5f3ee] px-6">
-      <div className="w-full max-w-xl rounded-[32px] border border-black/8 bg-white px-8 py-10 text-center">
-        <h1 className="text-3xl font-semibold text-slate-950">Reset flow not included in this admin build</h1>
-        <p className="mt-4 text-sm leading-7 text-slate-500">
-          Connect this route to your backend password reset token flow if you
-          want admin password recovery inside the dashboard frontend.
-        </p>
-        <Link
-          href="/login"
-          className="mt-8 inline-flex rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white"
+    <AuthShell
+      eyebrow="Set New Password"
+      title="Choose a fresh password"
+      description="This page submits the new password together with the secure reset token provided by your backend."
+      sideTitle="Finish the reset securely and get back into your account."
+      sideDescription="Strong passwords and expiring reset links help keep storefront and dashboard access protected."
+      sideCardTitle="Token validation in progress"
+      sideCardDescription="If the token has expired or is invalid, the API will stop the reset and ask you to request a new link."
+      sideIcon={FiRefreshCw}
+      footer={
+        <div className="flex flex-wrap items-center gap-4 text-sm">
+          <Link href="/forgot-password" className="font-semibold text-slate-950 hover:text-slate-700">
+            Request another link
+          </Link>
+          <Link href="/login" className="font-semibold text-slate-600 hover:text-slate-950">
+            Return to login
+          </Link>
+        </div>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
+            New password
+          </label>
+          <div className="flex items-center rounded-2xl border border-slate-200 bg-white px-4">
+            <FiLock className="text-slate-400" />
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Minimum 6 characters"
+              className="h-14 w-full bg-transparent pl-3 text-slate-950 outline-none"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
+            Confirm new password
+          </label>
+          <div className="flex items-center rounded-2xl border border-slate-200 bg-white px-4">
+            <FiLock className="text-slate-400" />
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              placeholder="Repeat your new password"
+              className="h-14 w-full bg-transparent pl-3 text-slate-950 outline-none"
+            />
+          </div>
+        </div>
+
+        {(error || successMessage) ? (
+          <div
+            className={`flex items-start gap-3 rounded-2xl px-4 py-3 text-sm ${
+              error
+                ? "border border-red-200 bg-red-50 text-red-700"
+                : "border border-emerald-200 bg-emerald-50 text-emerald-700"
+            }`}
+          >
+            <FiAlertCircle className="mt-0.5 shrink-0" />
+            <p>{error ?? successMessage}</p>
+          </div>
+        ) : null}
+
+        <button
+          type="submit"
+          disabled={submitting}
+          className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
         >
-          Return to login
-        </Link>
-      </div>
-    </div>
+          {submitting ? "Updating password..." : "Update password"}
+          {!submitting && <FiArrowRight />}
+        </button>
+      </form>
+    </AuthShell>
   );
 }

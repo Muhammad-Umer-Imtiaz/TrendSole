@@ -1,12 +1,12 @@
 export const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-US", {
+  new Intl.NumberFormat("en-PK", {
     style: "currency",
-    currency: "USD",
+    currency: "PKR",
     maximumFractionDigits: 0,
   }).format(value);
 
 export const formatCompactNumber = (value: number) =>
-  new Intl.NumberFormat("en-US", {
+  new Intl.NumberFormat("en-PK", {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(value);

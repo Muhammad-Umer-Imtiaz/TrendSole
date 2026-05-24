@@ -165,9 +165,106 @@ const parsePositiveNumber = (value: unknown, fallback: number) => {
   return parsed;
 };
 
+const parseQueryBoolean = (value: unknown) => {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const normalizedValue = value.trim().toLowerCase();
+
+  if (normalizedValue === "true") {
+    return true;
+  }
+
+  if (normalizedValue === "false") {
+    return false;
+  }
+
+  return undefined;
+};
+
+const parseQueryList = (value: unknown) => {
+  if (typeof value !== "string") {
+    return [];
+  }
+
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
+const dedupeColors = (colors: string[]) => {
+  const seen = new Set<string>();
+
+  return colors
+    .map((color) => color.trim())
+    .filter(Boolean)
+    .filter((color) => {
+      const normalizedKey = color.toLowerCase();
+
+      if (seen.has(normalizedKey)) {
+        return false;
+      }
+
+      seen.add(normalizedKey);
+      return true;
+    });
+};
+
+const buildProductInventory = ({
+  colors,
+  colorVariants,
+  stock,
+}: {
+  colors: string[];
+  colorVariants: Array<{ color: string; stock: number }>;
+  stock: number;
+}) => {
+  const variantMap = new Map<string, { color: string; stock: number }>();
+
+  for (const variant of colorVariants) {
+    const color = variant.color.trim();
+
+    if (!color) {
+      continue;
+    }
+
+    const normalizedKey = color.toLowerCase();
+    const existingVariant = variantMap.get(normalizedKey);
+
+    if (existingVariant) {
+      existingVariant.stock += variant.stock;
+      continue;
+    }
+
+    variantMap.set(normalizedKey, {
+      color,
+      stock: Math.max(0, variant.stock),
+    });
+  }
+
+  const normalizedVariants = Array.from(variantMap.values());
+
+  if (normalizedVariants.length > 0) {
+    return {
+      colors: normalizedVariants.map((variant) => variant.color),
+      colorVariants: normalizedVariants,
+      stock: normalizedVariants.reduce((sum, variant) => sum + variant.stock, 0),
+    };
+  }
+
+  return {
+    colors: dedupeColors(colors),
+    colorVariants: [] as Array<{ color: string; stock: number }>,
+    stock: Math.max(0, stock),
+  };
+};
+
 export const createProduct = catchAsync(async (req: Request, res: Response) => {
   const validatedData = createProductSchema.parse(req.body);
   const files = getUploadedFiles(req);
+  const inventory = buildProductInventory(validatedData);
 
   const category = await Category.findOne({
     name: validatedData.productCategory,
@@ -187,6 +284,7 @@ export const createProduct = catchAsync(async (req: Request, res: Response) => {
   try {
     const product = await Product.create({
       ...validatedData,
+      ...inventory,
       productImages: uploadedImages,
     });
 
@@ -217,6 +315,10 @@ export const getAllProducts = catchAsync(async (req: Request, res: Response) => 
         .map((category) => category.trim())
         .filter(Boolean)
     : [];
+  const colors = parseQueryList(req.query.colors);
+  const isFeatured = parseQueryBoolean(req.query.featured);
+  const isNewArrival = parseQueryBoolean(req.query.newArrival);
+  const isBestSeller = parseQueryBoolean(req.query.bestSeller);
   const filter: Record<string, unknown> = {};
 
   if (!includeInactive) {
@@ -228,11 +330,28 @@ export const getAllProducts = catchAsync(async (req: Request, res: Response) => 
       { productName: { $regex: search, $options: "i" } },
       { productDescription: { $regex: search, $options: "i" } },
       { productCategory: { $regex: search, $options: "i" } },
+      { colors: { $elemMatch: { $regex: search, $options: "i" } } },
     ];
   }
 
   if (categories.length > 0) {
     filter.productCategory = { $in: categories };
+  }
+
+  if (colors.length > 0) {
+    filter.colors = { $in: colors };
+  }
+
+  if (typeof isFeatured === "boolean") {
+    filter.isFeatured = isFeatured;
+  }
+
+  if (typeof isNewArrival === "boolean") {
+    filter.isNewArrival = isNewArrival;
+  }
+
+  if (typeof isBestSeller === "boolean") {
+    filter.isBestSeller = isBestSeller;
   }
 
   filter.productPrice = {
@@ -345,12 +464,40 @@ export const updateProduct = catchAsync(async (req: Request, res: Response) => {
     product.productCategory = validatedData.productCategory;
   }
 
-  if (validatedData.stock !== undefined) {
-    product.stock = validatedData.stock;
+  if (validatedData.colorVariants !== undefined) {
+    const inventory = buildProductInventory({
+      colors: validatedData.colors ?? product.colors,
+      colorVariants: validatedData.colorVariants,
+      stock: validatedData.stock ?? product.stock,
+    });
+
+    product.colors = inventory.colors;
+    product.colorVariants = inventory.colorVariants;
+    product.stock = inventory.stock;
+  } else {
+    if (validatedData.stock !== undefined) {
+      product.stock = validatedData.stock;
+    }
+
+    if (validatedData.colors !== undefined) {
+      product.colors = dedupeColors(validatedData.colors);
+    }
   }
 
   if (validatedData.isActive !== undefined) {
     product.isActive = validatedData.isActive;
+  }
+
+  if (validatedData.isFeatured !== undefined) {
+    product.isFeatured = validatedData.isFeatured;
+  }
+
+  if (validatedData.isNewArrival !== undefined) {
+    product.isNewArrival = validatedData.isNewArrival;
+  }
+
+  if (validatedData.isBestSeller !== undefined) {
+    product.isBestSeller = validatedData.isBestSeller;
   }
 
   if (hasNewImages) {

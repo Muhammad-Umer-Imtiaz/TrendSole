@@ -9,6 +9,7 @@ export const createOrderSchema = z.object({
     .array(
       z.object({
         productId: z.string().trim().min(1, "Product is required"),
+        selectedColor: z.string().trim().min(1, "Color selection is required").optional(),
         quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
       })
     )

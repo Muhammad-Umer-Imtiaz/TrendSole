@@ -2,11 +2,19 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { featuredProducts } from "@/lib/landingContent";
+import type { Product } from "@/lib/types";
 import { MotionReveal } from "./MotionReveal";
-import ProductCard from "./ProductCard";
+import ProductShowcaseCard from "../ui/ProductShowcaseCard";
 
-export default function FeaturedProducts() {
+interface FeaturedProductsProps {
+  products: Product[];
+  loading?: boolean;
+}
+
+export default function FeaturedProducts({
+  products,
+  loading = false,
+}: FeaturedProductsProps) {
   return (
     <section id="featured" className="mx-auto max-w-7xl px-6 py-20 md:py-24">
       <MotionReveal className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
@@ -38,11 +46,32 @@ export default function FeaturedProducts() {
         </motion.div>
       </MotionReveal>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-        {featuredProducts.map((product, index) => (
-          <ProductCard key={product.title} index={index} {...product} />
-        ))}
-      </div>
+      {loading ? (
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-[440px] animate-pulse rounded-[30px] bg-white/80"
+            />
+          ))}
+        </div>
+      ) : products.length === 0 ? (
+        <div className="rounded-[28px] border border-dashed border-black/10 bg-white/70 px-6 py-14 text-center text-sm text-stone-500">
+          Featured products will appear here once you mark products as featured from the dashboard.
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          {products.map((product, index) => (
+            <ProductShowcaseCard
+              key={product.id}
+              product={product}
+              index={index}
+              badge="Featured"
+              description={product.productDescription}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }
