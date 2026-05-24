@@ -13,12 +13,15 @@ export interface IProductColorVariant {
 export interface IProduct extends Document {
   productName: string;
   productPrice: number;
+  productCost: number;
   productDescription: string;
   productImages: IProductImage[];
   productCategory: string;
   colors: string[];
   colorVariants: IProductColorVariant[];
   stock: number;
+  discountPercentage: number;
+  offerLabel?: string;
   isActive: boolean;
   isFeatured: boolean;
   isNewArrival: boolean;
@@ -77,6 +80,12 @@ const productSchema: Schema<IProduct> = new Schema(
       required: true,
       min: 0,
     },
+    productCost: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
     productDescription: {
       type: String,
       required: true,
@@ -109,6 +118,17 @@ const productSchema: Schema<IProduct> = new Schema(
       required: true,
       default: 0,
       min: 0,
+    },
+    discountPercentage: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+    offerLabel: {
+      type: String,
+      trim: true,
+      default: "",
     },
     isActive: {
       type: Boolean,

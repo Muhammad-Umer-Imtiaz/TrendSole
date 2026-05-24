@@ -12,6 +12,9 @@ const STATUS_STYLES: Record<string, string> = {
   cancelled: "bg-red-50 text-red-700",
   paid: "bg-emerald-50 text-emerald-700",
   unpaid: "bg-red-50 text-red-700",
+  reviewed: "bg-sky-50 text-sky-700",
+  resolved: "bg-emerald-50 text-emerald-700",
+  open: "bg-amber-50 text-amber-700",
 };
 
 export default function StatusBadge({ status }: { status: string }) {

@@ -5,6 +5,7 @@ import { useDeferredValue, useEffect, useState } from "react";
 import {
   FiArrowRight,
   FiClock,
+  FiMessageSquare,
   FiLock,
   FiLogOut,
   FiPackage,
@@ -17,10 +18,10 @@ import Navbar from "@/components/landingPage/Navbar";
 import Card from "@/components/ui/Card";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Table, { type TableColumn } from "@/components/ui/Table";
-import { apiErrorMessage, authApi, ordersApi } from "@/lib/api";
+import { apiErrorMessage, authApi, feedbackApi, ordersApi } from "@/lib/api";
 import { formatCurrency, formatDate, toSentenceCase } from "@/lib/format";
 import { useAuthStore } from "@/store/auth.store";
-import type { Order, PaginationMeta } from "@/lib/types";
+import type { FeedbackItem, Order, PaginationMeta } from "@/lib/types";
 
 const DEFAULT_PAGINATION: PaginationMeta = {
   page: 1,
@@ -29,7 +30,7 @@ const DEFAULT_PAGINATION: PaginationMeta = {
   totalPages: 1,
 };
 
-type AccountTab = "overview" | "profile" | "security" | "orders";
+type AccountTab = "overview" | "profile" | "security" | "orders" | "feedback";
 
 export default function AccountPage() {
   const user = useAuthStore((state) => state.user);
@@ -37,8 +38,11 @@ export default function AccountPage() {
   const setPermissions = useAuthStore((state) => state.setPermissions);
   const logout = useAuthStore((state) => state.logout);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
+  const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta>(DEFAULT_PAGINATION);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const [feedbackSaving, setFeedbackSaving] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +60,11 @@ export default function AccountPage() {
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
+  });
+  const [feedbackForm, setFeedbackForm] = useState({
+    rating: 5,
+    subject: "",
+    message: "",
   });
 
   useEffect(() => {
@@ -91,22 +100,31 @@ export default function AccountPage() {
   useEffect(() => {
     let isMounted = true;
 
-    const loadOrders = async () => {
+    const loadOrdersAndFeedback = async () => {
       try {
         setOrdersLoading(true);
         setError(null);
-        const response = await ordersApi.listMine({
-          page,
-          limit: 5,
-          search: deferredSearch,
-        });
+        const [ordersResponse, ordersSummaryResponse, feedbackResponse] = await Promise.all([
+          ordersApi.listMine({
+            page,
+            limit: 5,
+            search: deferredSearch,
+          }),
+          ordersApi.listMine({
+            page: 1,
+            limit: 100,
+          }),
+          feedbackApi.listMine(),
+        ]);
 
         if (!isMounted) {
           return;
         }
 
-        setOrders(response.items);
-        setPagination(response.pagination);
+        setOrders(ordersResponse.items);
+        setAllOrders(ordersSummaryResponse.items);
+        setPagination(ordersResponse.pagination);
+        setFeedback(feedbackResponse);
       } catch (requestError) {
         if (!isMounted) {
           return;
@@ -120,7 +138,7 @@ export default function AccountPage() {
       }
     };
 
-    void loadOrders();
+    void loadOrdersAndFeedback();
 
     return () => {
       isMounted = false;
@@ -185,6 +203,30 @@ export default function AccountPage() {
       setError(apiErrorMessage(requestError));
     } finally {
       setPasswordSaving(false);
+    }
+  };
+
+  const handleFeedbackSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    try {
+      setFeedbackSaving(true);
+      setError(null);
+      setSuccessMessage(null);
+
+      const response = await feedbackApi.create(feedbackForm);
+
+      setFeedback((current) => [response, ...current]);
+      setFeedbackForm({
+        rating: 5,
+        subject: "",
+        message: "",
+      });
+      setSuccessMessage("Feedback submitted successfully.");
+    } catch (requestError) {
+      setError(apiErrorMessage(requestError));
+    } finally {
+      setFeedbackSaving(false);
     }
   };
 
@@ -256,7 +298,18 @@ export default function AccountPage() {
       icon: FiPackage,
       description: "Track and search your purchases",
     },
+    {
+      key: "feedback",
+      label: "Feedback",
+      icon: FiMessageSquare,
+      description: "Share feedback and track responses",
+    },
   ];
+
+  const totalSpent = allOrders.reduce((sum, order) => sum + order.total, 0);
+  const loyaltyPoints = Math.floor(totalSpent / 1000);
+  const loyaltyTier =
+    loyaltyPoints >= 120 ? "Gold" : loyaltyPoints >= 50 ? "Silver" : "Bronze";
 
   return (
     <AuthGuard>
@@ -321,7 +374,7 @@ export default function AccountPage() {
               )}
 
               <div className="rounded-[28px] border border-black/8 bg-white p-3 shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
-                <div className="grid gap-3 md:grid-cols-4">
+                <div className="grid gap-3 md:grid-cols-5">
                   {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.key;
@@ -403,6 +456,17 @@ export default function AccountPage() {
                           Refresh your details anytime from the tabs above.
                         </p>
                       </div>
+                      <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+                        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                          Loyalty tier
+                        </p>
+                        <p className="mt-3 text-3xl font-semibold text-slate-950">
+                          {loyaltyTier}
+                        </p>
+                        <p className="mt-2 text-sm text-slate-500">
+                          {loyaltyPoints} reward points earned from purchases.
+                        </p>
+                      </div>
                     </div>
                   </Card>
 
@@ -446,6 +510,19 @@ export default function AccountPage() {
                           <p className="text-sm font-semibold text-slate-950">Review orders</p>
                           <p className="mt-1 text-xs text-slate-500">
                             Search, paginate, and track fulfillment status.
+                          </p>
+                        </div>
+                        <FiArrowRight className="text-slate-400" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("feedback")}
+                        className="flex w-full items-center justify-between rounded-[22px] border border-slate-200 px-4 py-4 text-left"
+                      >
+                        <div>
+                          <p className="text-sm font-semibold text-slate-950">Share feedback</p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            Send product or service feedback to the team.
                           </p>
                         </div>
                         <FiArrowRight className="text-slate-400" />
@@ -670,6 +747,118 @@ export default function AccountPage() {
                     }
                   />
                 </Card>
+              ) : null}
+
+              {activeTab === "feedback" ? (
+                <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+                  <Card
+                    title="Feedback system"
+                    description="Submit store, product, or delivery feedback for the team to review."
+                  >
+                    <form onSubmit={handleFeedbackSubmit} className="space-y-4">
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-slate-700">
+                          Rating
+                        </label>
+                        <select
+                          value={feedbackForm.rating}
+                          onChange={(event) =>
+                            setFeedbackForm((current) => ({
+                              ...current,
+                              rating: Number(event.target.value),
+                            }))
+                          }
+                          className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none"
+                        >
+                          {[5, 4, 3, 2, 1].map((rating) => (
+                            <option key={rating} value={rating}>
+                              {rating} stars
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-slate-700">
+                          Subject
+                        </label>
+                        <input
+                          value={feedbackForm.subject}
+                          onChange={(event) =>
+                            setFeedbackForm((current) => ({
+                              ...current,
+                              subject: event.target.value,
+                            }))
+                          }
+                          placeholder="Delivery experience"
+                          className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-slate-700">
+                          Message
+                        </label>
+                        <textarea
+                          value={feedbackForm.message}
+                          onChange={(event) =>
+                            setFeedbackForm((current) => ({
+                              ...current,
+                              message: event.target.value,
+                            }))
+                          }
+                          rows={5}
+                          placeholder="Tell us what worked well or what should improve."
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm outline-none"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={feedbackSaving}
+                        className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                      >
+                        {feedbackSaving ? "Submitting..." : "Submit feedback"}
+                        {!feedbackSaving && <FiArrowRight />}
+                      </button>
+                    </form>
+                  </Card>
+
+                  <Card
+                    title="Feedback history"
+                    description="Track what you submitted and whether the team has reviewed it."
+                  >
+                    <div className="space-y-4">
+                      {feedback.length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-slate-300 px-6 py-10 text-center text-sm text-slate-500">
+                          No feedback submitted yet.
+                        </div>
+                      ) : (
+                        feedback.map((entry) => (
+                          <div
+                            key={entry.id}
+                            className="rounded-[24px] border border-slate-200 bg-slate-50 p-4"
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <p className="font-semibold text-slate-950">
+                                  {entry.subject}
+                                </p>
+                                <p className="mt-1 text-xs text-slate-500">
+                                  {formatDate(entry.createdAt)} • {entry.rating} / 5 stars
+                                </p>
+                              </div>
+                              <StatusBadge status={entry.status} />
+                            </div>
+                            <p className="mt-3 text-sm leading-7 text-slate-600">
+                              {entry.message}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </Card>
+                </div>
               ) : null}
             </div>
           </div>

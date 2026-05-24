@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { FiArrowUpRight, FiCheck } from "react-icons/fi";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, getDiscountedPrice } from "@/lib/format";
 import type { Product } from "@/lib/types";
 
 interface ProductShowcaseCardProps {
@@ -54,6 +54,11 @@ export default function ProductShowcaseCard({
   const primaryImage = product.productImages[0]?.url;
   const targetHref = href ?? `/products/${product.id}`;
   const colorSummary = getColorSummary(product);
+  const discountedPrice = getDiscountedPrice(
+    product.productPrice,
+    product.discountPercentage
+  );
+  const hasDiscount = discountedPrice < product.productPrice;
 
   return (
     <motion.article
@@ -70,9 +75,16 @@ export default function ProductShowcaseCard({
     >
       <div className="relative overflow-hidden border-b border-[#e8dfd2] bg-[radial-gradient(circle_at_top,_rgba(196,166,122,0.22),_transparent_48%),linear-gradient(135deg,#fbf6ef_0%,#f2ece3_100%)]">
         <div className={`${compact ? "h-60" : "h-72"} relative`}>
-          <span className="absolute left-5 top-5 z-20 rounded-full border border-black/8 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-600">
-            {getBadge(product, badge)}
-          </span>
+          <div className="absolute left-5 top-5 z-20 flex flex-wrap gap-2">
+            <span className="rounded-full border border-black/8 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-600">
+              {getBadge(product, badge)}
+            </span>
+            {product.offerLabel ? (
+              <span className="rounded-full bg-amber-400 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-950">
+                {product.offerLabel}
+              </span>
+            ) : null}
+          </div>
 
           {primaryImage ? (
             <Image
@@ -146,9 +158,16 @@ export default function ProductShowcaseCard({
             <p className="text-xs uppercase tracking-[0.22em] text-stone-500">
               Price
             </p>
-            <p className="mt-1 text-2xl font-semibold text-slate-950">
-              {formatCurrency(product.productPrice)}
-            </p>
+            <div className="mt-1">
+              <p className="text-2xl font-semibold text-slate-950">
+                {formatCurrency(discountedPrice)}
+              </p>
+              {hasDiscount ? (
+                <p className="text-sm text-slate-400 line-through">
+                  {formatCurrency(product.productPrice)}
+                </p>
+              ) : null}
+            </div>
           </div>
 
           <div

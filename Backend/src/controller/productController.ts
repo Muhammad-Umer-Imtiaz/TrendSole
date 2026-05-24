@@ -444,6 +444,10 @@ export const updateProduct = catchAsync(async (req: Request, res: Response) => {
     product.productPrice = validatedData.productPrice;
   }
 
+  if (validatedData.productCost !== undefined) {
+    product.productCost = validatedData.productCost;
+  }
+
   if (validatedData.productDescription !== undefined) {
     product.productDescription = validatedData.productDescription;
   }
@@ -486,6 +490,14 @@ export const updateProduct = catchAsync(async (req: Request, res: Response) => {
 
   if (validatedData.isActive !== undefined) {
     product.isActive = validatedData.isActive;
+  }
+
+  if (validatedData.discountPercentage !== undefined) {
+    product.discountPercentage = validatedData.discountPercentage;
+  }
+
+  if (validatedData.offerLabel !== undefined) {
+    product.offerLabel = validatedData.offerLabel;
   }
 
   if (validatedData.isFeatured !== undefined) {

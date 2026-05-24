@@ -4,6 +4,7 @@ import userRoutes from './routes/userRoutes.js'
 import productRoutes from './routes/productRoutes.js'
 import categoryRoutes from './routes/categoryRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
+import feedbackRoutes from './routes/feedbackRoutes.js'
 import { analyticsRouter, dashboardRouter } from './routes/dashboardRoutes.js'
 import { globalErrorHandler } from './middleware/globalErrorHandler.js'
 
@@ -43,6 +44,7 @@ app.use('/api/v1/users',userRoutes)
 app.use('/api/v1/products',productRoutes)
 app.use('/api/v1/categories',categoryRoutes)
 app.use('/api/v1/orders',orderRoutes)
+app.use('/api/v1/feedback',feedbackRoutes)
 app.use('/api/v1/dashboard',dashboardRouter)
 app.use('/api/v1/analytics',analyticsRouter)
 

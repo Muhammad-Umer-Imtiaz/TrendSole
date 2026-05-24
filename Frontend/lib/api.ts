@@ -10,6 +10,7 @@ import type {
   Customer,
   CustomerFormValues,
   DashboardOverview,
+  FeedbackItem,
   InventoryItem,
   LoginPayload,
   LoginResponse,
@@ -110,6 +111,7 @@ const normalizeProduct = (product: Record<string, unknown>): Product => {
     id: String(product.id ?? product._id ?? ""),
     productName: String(product.productName ?? ""),
     productPrice: Number(product.productPrice ?? 0),
+    productCost: Number(product.productCost ?? 0),
     productDescription: String(product.productDescription ?? ""),
     productImages: Array.isArray(product.productImages)
       ? product.productImages.map((image) => ({
@@ -128,6 +130,9 @@ const normalizeProduct = (product: Record<string, unknown>): Product => {
       colorVariants.length > 0
         ? colorVariants.reduce((sum, variant) => sum + variant.stock, 0)
         : rawStock,
+    discountPercentage: Number(product.discountPercentage ?? 0),
+    offerLabel:
+      typeof product.offerLabel === "string" ? product.offerLabel : undefined,
     isActive: Boolean(product.isActive ?? false),
     isFeatured: Boolean(product.isFeatured ?? false),
     isNewArrival: Boolean(product.isNewArrival ?? false),
@@ -195,6 +200,7 @@ const normalizeOrder = (order: Record<string, unknown>): Order => ({
             : undefined,
         quantity: Number((item as { quantity?: number }).quantity ?? 0),
         unitPrice: Number((item as { unitPrice?: number }).unitPrice ?? 0),
+        unitCost: Number((item as { unitCost?: number }).unitCost ?? 0),
         lineTotal: Number((item as { lineTotal?: number }).lineTotal ?? 0),
       }))
     : [],
@@ -266,6 +272,22 @@ const normalizeStaffMember = (
         : undefined,
 });
 
+const normalizeFeedback = (feedback: Record<string, unknown>): FeedbackItem => ({
+  id: String(feedback.id ?? feedback._id ?? ""),
+  customerId: String(feedback.customerId ?? ""),
+  customerName: String(feedback.customerName ?? ""),
+  customerEmail: String(feedback.customerEmail ?? ""),
+  rating: Number(feedback.rating ?? 0),
+  subject: String(feedback.subject ?? ""),
+  message: String(feedback.message ?? ""),
+  status:
+    feedback.status === "reviewed" || feedback.status === "resolved"
+      ? feedback.status
+      : "open",
+  createdAt: String(feedback.createdAt ?? new Date().toISOString()),
+  updatedAt: String(feedback.updatedAt ?? new Date().toISOString()),
+});
+
 const buildProductFormData = (
   values: ProductFormValues,
   images: File[]
@@ -288,11 +310,14 @@ const buildProductFormData = (
 
   formData.append("productName", values.productName);
   formData.append("productPrice", values.productPrice);
+  formData.append("productCost", values.productCost);
   formData.append("productDescription", values.productDescription);
   formData.append("productCategory", values.productCategory);
   formData.append("colors", JSON.stringify(resolvedColors));
   formData.append("colorVariants", JSON.stringify(normalizedVariants));
   formData.append("stock", String(resolvedStock));
+  formData.append("discountPercentage", values.discountPercentage);
+  formData.append("offerLabel", values.offerLabel);
   formData.append("isActive", String(values.isActive));
   formData.append("isFeatured", String(values.isFeatured));
   formData.append("isNewArrival", String(values.isNewArrival));
@@ -540,6 +565,14 @@ export const dashboardApi = {
           (data.stats as { users?: number } | undefined)?.users ?? data.users ?? 0
         ),
       },
+      dailySummary: {
+        orderCount: Number(
+          (data.dailySummary as { orderCount?: number } | undefined)?.orderCount ?? 0
+        ),
+        revenue: Number(
+          (data.dailySummary as { revenue?: number } | undefined)?.revenue ?? 0
+        ),
+      },
       recentOrders: Array.isArray(data.recentOrders)
         ? data.recentOrders.map((item) =>
             normalizeOrder(item as Record<string, unknown>)
@@ -777,6 +810,55 @@ export const ordersApi = {
       },
     ]);
   },
+};
+
+export const feedbackApi = {
+  async list(params?: { page?: number; limit?: number; search?: string }) {
+    const data = await requestWithFallback<Record<string, unknown> | FeedbackItem[]>([
+      { method: "GET", url: "/feedback", params },
+    ]);
+
+    const feedback = Array.isArray(data)
+      ? data
+      : Array.isArray(data.feedback)
+        ? data.feedback
+        : [];
+
+    return toPaginatedResult(
+      feedback.map((item) => normalizeFeedback(item as Record<string, unknown>)),
+      Array.isArray(data) ? undefined : (data.pagination as Record<string, unknown>),
+      params?.limit ?? 10
+    );
+  },
+
+  async listMine() {
+    const data = await requestWithFallback<Record<string, unknown> | FeedbackItem[]>([
+      { method: "GET", url: "/feedback/my" },
+    ]);
+
+    const feedback = Array.isArray(data)
+      ? data
+      : Array.isArray(data.feedback)
+        ? data.feedback
+        : [];
+
+    return feedback.map((item) => normalizeFeedback(item as Record<string, unknown>));
+  },
+
+  async create(payload: { rating: number; subject: string; message: string }) {
+    const data = await requestWithFallback<Record<string, unknown>>([
+      { method: "POST", url: "/feedback", data: payload },
+    ]);
+
+    return normalizeFeedback(
+      (data.feedback as Record<string, unknown> | undefined) ?? data
+    );
+  },
+
+  updateStatus: (id: string, status: "open" | "reviewed" | "resolved") =>
+    requestWithFallback<ApiMessageResponse>([
+      { method: "PATCH", url: `/feedback/${id}/status`, data: { status } },
+    ]),
 };
 
 export const customersApi = {

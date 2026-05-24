@@ -6,6 +6,7 @@ import {
   FiActivity,
   FiBarChart2,
   FiBox,
+  FiFileText,
   FiGrid,
   FiPackage,
   FiShield,
@@ -25,6 +26,7 @@ const ICONS = {
   customers: FiUsers,
   inventory: FiPackage,
   analytics: FiBarChart2,
+  reports: FiFileText,
   staff: FiShield,
 };
 

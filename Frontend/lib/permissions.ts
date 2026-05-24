@@ -196,6 +196,12 @@ export const SIDEBAR_ITEMS: SidebarItemConfig[] = [
     requiredPermissions: ["analytics:view"],
   },
   {
+    href: "/dashboard/reports",
+    label: "Reports",
+    icon: "reports",
+    requiredPermissions: ["analytics:view"],
+  },
+  {
     href: "/dashboard/staff",
     label: "Staff Management",
     icon: "staff",

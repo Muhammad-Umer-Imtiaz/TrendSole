@@ -1,12 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import { FiActivity, FiBarChart2, FiPackage, FiUsers } from "react-icons/fi";
 import AuthGuard from "@/components/auth/AuthGuard";
 import Card from "@/components/ui/Card";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Table, { type TableColumn } from "@/components/ui/Table";
 import { dashboardApi, apiErrorMessage } from "@/lib/api";
 import { formatCompactNumber, formatCurrency, formatDate } from "@/lib/format";
+import { hasAllPermissions } from "@/lib/permissions";
+import { useAuthStore } from "@/store/auth.store";
 import type { DashboardOverview, Order } from "@/lib/types";
 
 const statsConfig = [
@@ -56,6 +60,7 @@ const orderColumns: TableColumn<Order>[] = [
 ];
 
 export default function DashboardPage() {
+  const permissions = useAuthStore((state) => state.permissions);
   const [data, setData] = useState<DashboardOverview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,8 +68,8 @@ export default function DashboardPage() {
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const response = await dashboardApi.getOverview();
-        setData(response);
+        const overview = await dashboardApi.getOverview();
+        setData(overview);
       } catch (requestError) {
         setError(apiErrorMessage(requestError));
       } finally {
@@ -74,6 +79,37 @@ export default function DashboardPage() {
 
     void loadDashboard();
   }, []);
+
+  const quickLinks = [
+    {
+      href: "/dashboard/orders",
+      label: "Review orders",
+      description: "Update fulfillment and invoice activity.",
+      icon: FiActivity,
+      requiredPermissions: ["orders:read"] as const,
+    },
+    {
+      href: "/dashboard/products",
+      label: "Manage catalog",
+      description: "Add products, pricing, and offers.",
+      icon: FiPackage,
+      requiredPermissions: ["products:read"] as const,
+    },
+    {
+      href: "/dashboard/customers",
+      label: "Customer desk",
+      description: "Track customer records, history, and feedback.",
+      icon: FiUsers,
+      requiredPermissions: ["customers:read"] as const,
+    },
+    {
+      href: "/dashboard/reports",
+      label: "Open reports",
+      description: "Review sales, inventory, and profit analysis.",
+      icon: FiBarChart2,
+      requiredPermissions: ["analytics:view"] as const,
+    },
+  ].filter((link) => hasAllPermissions(permissions, [...link.requiredPermissions]));
 
   return (
     <AuthGuard requiredPermissions={["dashboard:view"]}>
@@ -111,6 +147,67 @@ export default function DashboardPage() {
               </Card>
             );
           })}
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+          <Card
+            title="Daily sales summary"
+            description="A same-day snapshot for order activity and revenue throughput."
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Orders today
+                </p>
+                <p className="mt-3 text-3xl font-semibold text-slate-950">
+                  {formatCompactNumber(data?.dailySummary?.orderCount ?? 0)}
+                </p>
+                <p className="mt-2 text-sm text-slate-500">
+                  Orders created on the current calendar day.
+                </p>
+              </div>
+              <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Revenue today
+                </p>
+                <p className="mt-3 text-3xl font-semibold text-slate-950">
+                  {formatCurrency(data?.dailySummary?.revenue ?? 0)}
+                </p>
+                <p className="mt-2 text-sm text-slate-500">
+                  Gross order value recorded for today.
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          <Card
+            title="Quick navigation"
+            description="Jump directly into the operational modules your team uses most."
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              {quickLinks.map((link) => {
+                const Icon = link.icon;
+
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="rounded-[24px] border border-slate-200 bg-slate-50 p-5 transition-colors hover:border-slate-950 hover:bg-white"
+                  >
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white">
+                      <Icon />
+                    </div>
+                    <p className="mt-4 text-sm font-semibold text-slate-950">
+                      {link.label}
+                    </p>
+                    <p className="mt-2 text-xs leading-6 text-slate-500">
+                      {link.description}
+                    </p>
+                  </Link>
+                );
+              })}
+            </div>
+          </Card>
         </div>
 
         <Card

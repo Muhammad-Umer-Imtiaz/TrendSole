@@ -17,6 +17,15 @@ export const getDashboardOverview = catchAsync(
     ]);
 
     const totalSales = orders.reduce((sum, order) => sum + order.total, 0);
+    const today = new Date();
+    const todayOrders = orders.filter((order) => {
+      const orderDate = new Date(order.createdAt);
+      return (
+        orderDate.getFullYear() === today.getFullYear() &&
+        orderDate.getMonth() === today.getMonth() &&
+        orderDate.getDate() === today.getDate()
+      );
+    });
 
     return res.status(200).json({
       success: true,
@@ -25,6 +34,10 @@ export const getDashboardOverview = catchAsync(
         orders: orders.length,
         products: productCount,
         users: userCount,
+      },
+      dailySummary: {
+        orderCount: todayOrders.length,
+        revenue: todayOrders.reduce((sum, order) => sum + order.total, 0),
       },
       recentOrders: orders.slice(0, 6).map((order) => ({
         id: String(order._id),

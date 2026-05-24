@@ -84,6 +84,9 @@ const productBaseSchema = z.object({
   productPrice: z.coerce
     .number()
     .min(0, "Product price must be greater than or equal to 0"),
+  productCost: z.coerce
+    .number()
+    .min(0, "Product cost must be greater than or equal to 0"),
   productDescription: z
     .string()
     .trim()
@@ -95,6 +98,12 @@ const productBaseSchema = z.object({
     .number()
     .int("Stock must be a whole number")
     .min(0, "Stock must be greater than or equal to 0"),
+  discountPercentage: z.coerce
+    .number()
+    .min(0, "Discount percentage must be between 0 and 100")
+    .max(100, "Discount percentage must be between 0 and 100")
+    .default(0),
+  offerLabel: z.string().trim().max(80).default(""),
   isActive: booleanField,
   isFeatured: booleanField.default(false),
   isNewArrival: booleanField.default(false),

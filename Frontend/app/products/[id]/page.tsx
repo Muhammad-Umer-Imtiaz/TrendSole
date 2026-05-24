@@ -18,7 +18,7 @@ import Navbar from "@/components/landingPage/Navbar";
 import Modal from "@/components/ui/Modal";
 import ProductShowcaseCard from "@/components/ui/ProductShowcaseCard";
 import { apiErrorMessage, ordersApi, productApi } from "@/lib/api";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, getDiscountedPrice } from "@/lib/format";
 import { useAuthStore } from "@/store/auth.store";
 import type { Product } from "@/lib/types";
 
@@ -90,6 +90,9 @@ export default function ProductDetailPage() {
   }, [params.id]);
 
   const availableColors = product?.colors ?? [];
+  const effectiveUnitPrice = product
+    ? getDiscountedPrice(product.productPrice, product.discountPercentage)
+    : 0;
   const matchingVariant = getMatchingVariant(product, selectedColor);
   const hasVariantInventory = (product?.colorVariants.length ?? 0) > 0;
   const availableUnits = hasVariantInventory
@@ -97,7 +100,7 @@ export default function ProductDetailPage() {
     : product?.stock ?? 0;
   const canPlaceOrder = Boolean(product && product.stock > 0);
   const colorSelectionRequired = availableColors.length > 0;
-  const orderTotal = product ? product.productPrice * quantity : 0;
+  const orderTotal = effectiveUnitPrice * quantity;
 
   const resetOrderForm = () => {
     setQuantity(1);
@@ -266,8 +269,18 @@ export default function ProductDetailPage() {
 
                   <div className="mt-6 flex flex-wrap items-center gap-3">
                     <span className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white">
-                      {formatCurrency(product.productPrice)}
+                      {formatCurrency(effectiveUnitPrice)}
                     </span>
+                    {effectiveUnitPrice < product.productPrice ? (
+                      <span className="rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold text-stone-500 line-through">
+                        {formatCurrency(product.productPrice)}
+                      </span>
+                    ) : null}
+                    {product.offerLabel ? (
+                      <span className="rounded-full bg-amber-300 px-4 py-2 text-sm font-semibold text-slate-950">
+                        {product.offerLabel}
+                      </span>
+                    ) : null}
                     <span
                       className={`rounded-full px-4 py-2 text-sm font-semibold ${
                         product.stock > 0
@@ -474,7 +487,7 @@ export default function ProductDetailPage() {
                     {product.productName}
                   </h3>
                   <p className="mt-2 text-sm text-slate-500">
-                    {formatCurrency(product.productPrice)} per unit
+                    {formatCurrency(effectiveUnitPrice)} per unit
                   </p>
                 </div>
                 <div className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-slate-600">

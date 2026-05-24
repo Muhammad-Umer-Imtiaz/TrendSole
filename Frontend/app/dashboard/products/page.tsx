@@ -25,11 +25,14 @@ import type { Category, Product, ProductFormValues } from "@/lib/types";
 const emptyProductForm: ProductFormValues = {
   productName: "",
   productPrice: "",
+  productCost: "",
   productDescription: "",
   productCategory: "",
   colors: [],
   colorVariants: [],
   stock: "",
+  discountPercentage: "0",
+  offerLabel: "",
   isActive: true,
   isFeatured: false,
   isNewArrival: false,
@@ -149,11 +152,14 @@ export default function ProductsPage() {
     setFormValues({
       productName: product.productName,
       productPrice: String(product.productPrice),
+      productCost: String(product.productCost),
       productDescription: product.productDescription,
       productCategory: product.productCategory,
       colors: product.colors,
       colorVariants: product.colorVariants,
       stock: String(product.stock),
+      discountPercentage: String(product.discountPercentage ?? 0),
+      offerLabel: product.offerLabel ?? "",
       isActive: product.isActive,
       isFeatured: product.isFeatured,
       isNewArrival: product.isNewArrival,
@@ -535,6 +541,23 @@ export default function ProductsPage() {
               </label>
 
               <label className="space-y-2 text-sm font-medium text-slate-700">
+                <span>Unit cost</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={formValues.productCost}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      productCost: event.target.value,
+                    }))
+                  }
+                  placeholder="9500"
+                  className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-slate-950"
+                />
+              </label>
+
+              <label className="space-y-2 text-sm font-medium text-slate-700">
                 <span>Stock</span>
                 <input
                   type="number"
@@ -555,6 +578,41 @@ export default function ProductsPage() {
                     ? "Total stock is calculated automatically from your color variants."
                     : "Use shared stock when you do not need per-color inventory yet."}
                 </p>
+              </label>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <label className="space-y-2 text-sm font-medium text-slate-700">
+                <span>Discount percentage</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={formValues.discountPercentage}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      discountPercentage: event.target.value,
+                    }))
+                  }
+                  placeholder="10"
+                  className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-slate-950"
+                />
+              </label>
+
+              <label className="space-y-2 text-sm font-medium text-slate-700">
+                <span>Offer label</span>
+                <input
+                  value={formValues.offerLabel}
+                  onChange={(event) =>
+                    setFormValues((current) => ({
+                      ...current,
+                      offerLabel: event.target.value,
+                    }))
+                  }
+                  placeholder="Weekend Deal"
+                  className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-slate-950"
+                />
               </label>
             </div>
 

@@ -7,12 +7,13 @@ import Card from "@/components/ui/Card";
 import Modal from "@/components/ui/Modal";
 import StatusBadge from "@/components/ui/StatusBadge";
 import Table, { type TableColumn } from "@/components/ui/Table";
-import { apiErrorMessage, customersApi } from "@/lib/api";
+import { apiErrorMessage, customersApi, feedbackApi } from "@/lib/api";
 import { formatCurrency, formatDate, toSentenceCase } from "@/lib/format";
 import { useAuthStore } from "@/store/auth.store";
 import type {
   Customer,
   CustomerFormValues,
+  FeedbackItem,
   PaginationMeta,
   UserRole,
 } from "@/lib/types";
@@ -47,8 +48,10 @@ export default function CustomersPage() {
     totalPages: 1,
   });
   const [loading, setLoading] = useState(true);
+  const [feedbackLoading, setFeedbackLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [feedbackEntries, setFeedbackEntries] = useState<FeedbackItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
@@ -80,12 +83,16 @@ export default function CustomersPage() {
     const loadInitialCustomers = async () => {
       try {
         setLoading(true);
+        setFeedbackLoading(true);
         setError(null);
-        const response = await customersApi.listPaginated({
-          page,
-          limit: 10,
-          search: deferredSearch,
-        });
+        const [response, feedbackResponse] = await Promise.all([
+          customersApi.listPaginated({
+            page,
+            limit: 10,
+            search: deferredSearch,
+          }),
+          feedbackApi.list({ page: 1, limit: 6 }),
+        ]);
 
         if (!isMounted) {
           return;
@@ -93,6 +100,7 @@ export default function CustomersPage() {
 
         setCustomers(response.items);
         setPagination(response.pagination);
+        setFeedbackEntries(feedbackResponse.items);
       } catch (requestError) {
         if (!isMounted) {
           return;
@@ -102,6 +110,7 @@ export default function CustomersPage() {
       } finally {
         if (isMounted) {
           setLoading(false);
+          setFeedbackLoading(false);
         }
       }
     };
@@ -174,6 +183,22 @@ export default function CustomersPage() {
     try {
       await customersApi.delete(customer.id);
       await loadCustomers();
+    } catch (requestError) {
+      setError(apiErrorMessage(requestError));
+    }
+  };
+
+  const handleFeedbackStatusUpdate = async (
+    feedbackId: string,
+    status: "open" | "reviewed" | "resolved"
+  ) => {
+    try {
+      await feedbackApi.updateStatus(feedbackId, status);
+      setFeedbackEntries((current) =>
+        current.map((entry) =>
+          entry.id === feedbackId ? { ...entry, status } : entry
+        )
+      );
     } catch (requestError) {
       setError(apiErrorMessage(requestError));
     }
@@ -308,6 +333,67 @@ export default function CustomersPage() {
                 : "No customers have been added yet."
             }
           />
+        </Card>
+
+        <Card
+          title="Feedback inbox"
+          description="Review customer feedback, ratings, and resolution status from one place."
+        >
+          {feedbackLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-24 animate-pulse rounded-2xl bg-slate-100"
+                />
+              ))}
+            </div>
+          ) : feedbackEntries.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-300 px-6 py-10 text-center text-sm text-slate-500">
+              No feedback has been submitted yet.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {feedbackEntries.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="rounded-[24px] border border-slate-200 bg-slate-50 p-4"
+                >
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <p className="font-semibold text-slate-950">{entry.subject}</p>
+                        <StatusBadge status={entry.status} />
+                      </div>
+                      <p className="mt-2 text-xs text-slate-500">
+                        {entry.customerName} • {entry.customerEmail} • {entry.rating} / 5 stars •{" "}
+                        {formatDate(entry.createdAt)}
+                      </p>
+                      <p className="mt-3 text-sm leading-7 text-slate-600">
+                        {entry.message}
+                      </p>
+                    </div>
+                    {canManageCustomers ? (
+                      <select
+                        value={entry.status}
+                        onChange={(event) =>
+                          void handleFeedbackStatusUpdate(
+                            entry.id,
+                            event.target.value as "open" | "reviewed" | "resolved"
+                          )
+                        }
+                        className="min-w-[150px] rounded-full border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-slate-950"
+                      >
+                        <option value="open">Open</option>
+                        <option value="reviewed">Reviewed</option>
+                        <option value="resolved">Resolved</option>
+                      </select>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
 
         <Modal

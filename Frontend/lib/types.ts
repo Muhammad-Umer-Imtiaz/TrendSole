@@ -78,12 +78,15 @@ export interface Product {
   id: string;
   productName: string;
   productPrice: number;
+  productCost: number;
   productDescription: string;
   productImages: ProductImage[];
   productCategory: string;
   colors: string[];
   colorVariants: ProductColorVariant[];
   stock: number;
+  discountPercentage: number;
+  offerLabel?: string;
   isActive: boolean;
   isFeatured: boolean;
   isNewArrival: boolean;
@@ -109,11 +112,14 @@ export interface ProductListParams {
 export interface ProductFormValues {
   productName: string;
   productPrice: string;
+  productCost: string;
   productDescription: string;
   productCategory: string;
   colors: string[];
   colorVariants: ProductColorVariant[];
   stock: string;
+  discountPercentage: string;
+  offerLabel: string;
   isActive: boolean;
   isFeatured: boolean;
   isNewArrival: boolean;
@@ -170,6 +176,7 @@ export interface OrderItem {
   selectedColor?: string;
   quantity: number;
   unitPrice: number;
+  unitCost?: number;
   lineTotal: number;
 }
 
@@ -207,6 +214,10 @@ export interface DashboardStats {
 
 export interface DashboardOverview {
   stats: DashboardStats;
+  dailySummary?: {
+    orderCount: number;
+    revenue: number;
+  };
   recentOrders: Order[];
 }
 
@@ -266,6 +277,19 @@ export interface PaginationMeta {
 export interface PaginatedResult<T> {
   items: T[];
   pagination: PaginationMeta;
+}
+
+export interface FeedbackItem {
+  id: string;
+  customerId: string;
+  customerName: string;
+  customerEmail: string;
+  rating: number;
+  subject: string;
+  message: string;
+  status: "open" | "reviewed" | "resolved";
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateOrderPayload {

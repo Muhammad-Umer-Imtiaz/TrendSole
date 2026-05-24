@@ -19,6 +19,11 @@ const parsePositiveNumber = (value: unknown, fallback: number) => {
 const colorsMatch = (firstColor: string, secondColor: string) =>
   firstColor.trim().toLowerCase() === secondColor.trim().toLowerCase();
 
+const getDiscountedPrice = (basePrice: number, discountPercentage?: number) => {
+  const safeDiscount = Math.min(Math.max(discountPercentage ?? 0, 0), 100);
+  return Math.max(0, basePrice - (basePrice * safeDiscount) / 100);
+};
+
 const serializeOrder = (order: {
   _id: unknown;
   orderNumber: string;
@@ -39,6 +44,7 @@ const serializeOrder = (order: {
     selectedColor?: string;
     quantity: number;
     unitPrice: number;
+    unitCost: number;
     lineTotal: number;
   }>;
   createdAt: Date;
@@ -63,6 +69,7 @@ const serializeOrder = (order: {
     selectedColor: item.selectedColor || undefined,
     quantity: item.quantity,
     unitPrice: item.unitPrice,
+    unitCost: item.unitCost,
     lineTotal: item.lineTotal,
   })),
   createdAt: order.createdAt,
@@ -176,16 +183,24 @@ export const createOrder = catchAsync(
       };
     });
 
-    const orderItems = items.map(({ product, quantity, selectedColor }) => ({
+    const orderItems = items.map(({ product, quantity, selectedColor }) => {
+      const unitPrice = getDiscountedPrice(
+        product.productPrice,
+        product.discountPercentage
+      );
+
+      return {
       productId: product._id,
       productName: product.productName,
       productImage: product.productImages[0]?.url ?? "",
       productCategory: product.productCategory,
       selectedColor,
       quantity,
-      unitPrice: product.productPrice,
-      lineTotal: product.productPrice * quantity,
-    }));
+      unitPrice,
+      unitCost: product.productCost,
+      lineTotal: unitPrice * quantity,
+    };
+    });
     const total = orderItems.reduce((sum, item) => sum + item.lineTotal, 0);
     const orderNumber = `TS-${Date.now().toString().slice(-8)}`;
 
