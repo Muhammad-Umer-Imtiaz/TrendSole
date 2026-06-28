@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { FiAlertCircle, FiArrowRight, FiLock, FiRefreshCw } from "react-icons/fi";
+import { FiAlertCircle, FiArrowRight, FiEye, FiEyeOff, FiLock, FiRefreshCw } from "react-icons/fi";
 import AuthShell from "@/components/auth/AuthShell";
 import { apiErrorMessage, authApi } from "@/lib/api";
 import { resetPasswordFormSchema } from "@/lib/validations/auth";
@@ -13,6 +13,8 @@ export default function ResetPasswordTokenPage() {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -61,31 +63,30 @@ export default function ResetPasswordTokenPage() {
       sideCardTitle="Token validation in progress"
       sideCardDescription="If the token has expired or is invalid, the API will stop the reset and ask you to request a new link."
       sideIcon={FiRefreshCw}
-      footer={
-        <div className="flex flex-wrap items-center gap-4 text-sm">
-          <Link href="/forgot-password" className="font-semibold text-slate-950 hover:text-slate-700">
-            Request another link
-          </Link>
-          <Link href="/login" className="font-semibold text-slate-600 hover:text-slate-950">
-            Return to login
-          </Link>
-        </div>
-      }
+    
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="mb-2 block text-sm font-semibold text-slate-700">
             New password
           </label>
-          <div className="flex items-center rounded-2xl border border-slate-200 bg-white px-4">
-            <FiLock className="text-slate-400" />
+          <div className="relative">
+            <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               placeholder="Minimum 6 characters"
-              className="h-14 w-full bg-transparent pl-3 text-slate-950 outline-none"
+              className="h-14 w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-12 text-slate-950 outline-none transition-colors focus:border-slate-950"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 transition-colors hover:text-slate-950 outline-none"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+            </button>
           </div>
         </div>
 
@@ -93,15 +94,23 @@ export default function ResetPasswordTokenPage() {
           <label className="mb-2 block text-sm font-semibold text-slate-700">
             Confirm new password
           </label>
-          <div className="flex items-center rounded-2xl border border-slate-200 bg-white px-4">
-            <FiLock className="text-slate-400" />
+          <div className="relative">
+            <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
               placeholder="Repeat your new password"
-              className="h-14 w-full bg-transparent pl-3 text-slate-950 outline-none"
+              className="h-14 w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-12 text-slate-950 outline-none transition-colors focus:border-slate-950"
             />
+           <button
+  type="button"
+  onClick={() => setShowConfirmPassword((current) => !current)}
+  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-950 outline-none border-none focus:outline-none focus:ring-0 active:outline-none active:ring-0"
+  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+>
+  {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+</button>
           </div>
         </div>
 

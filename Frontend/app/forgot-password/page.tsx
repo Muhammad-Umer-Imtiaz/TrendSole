@@ -49,33 +49,26 @@ export default function ForgotPasswordPage() {
       sideCardTitle="Email-based recovery"
       sideCardDescription="If the account exists, the API sends a secure tokenized link that expires automatically."
       sideIcon={FiRefreshCw}
-      footer={
-        <div className="flex flex-wrap items-center gap-4 text-sm">
-          <Link href="/login" className="font-semibold text-slate-950 hover:text-slate-700">
-            Back to login
-          </Link>
-          <Link href="/otp" className="font-semibold text-slate-600 hover:text-slate-950">
-            Verify OTP instead
-          </Link>
-        </div>
-      }
+      
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="mb-2 block text-sm font-semibold text-slate-700">
             Email address
           </label>
-          <div className="flex items-center rounded-2xl border border-slate-200 bg-white px-4">
-            <FiMail className="text-slate-400" />
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="you@example.com"
-              className="h-14 w-full bg-transparent pl-3 text-slate-950 outline-none"
-            />
-          </div>
+         <div className="relative">
+  <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
+
+  <input
+    type="email"
+    value={email}
+    onChange={(event) => setEmail(event.target.value)}
+    placeholder="you@example.com"
+    className="h-14 w-full rounded-2xl border border-slate-200 bg-white pl-12 pr-4 text-slate-950 outline-none transition-colors focus:border-slate-950"
+  />
+</div>
         </div>
+  
 
         {(error || successMessage) ? (
           <div

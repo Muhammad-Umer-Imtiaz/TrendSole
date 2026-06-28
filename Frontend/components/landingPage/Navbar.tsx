@@ -50,10 +50,10 @@ export default function Navbar() {
         <Link href="/" className="flex items-center gap-3">
          <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl">
   <Image
-    src="/Logo.png"
+    src="/TrendSoleLogo.webp"
     alt="TrendSole Logo"
-    width={44}
-    height={44}
+    width={54}
+    height={54}
     className="object-cover"
   />
 </div>

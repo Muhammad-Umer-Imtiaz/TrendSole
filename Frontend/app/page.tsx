@@ -28,9 +28,9 @@ export default function HomePage() {
         setLoadingProducts(true);
 
         const [featured, arrivals, bestSellers, fallbackProducts] = await Promise.all([
-          productApi.list({ featured: true, limit: 4 }),
-          productApi.list({ newArrival: true, limit: 4 }),
-          productApi.list({ bestSeller: true, limit: 4 }),
+          productApi.list({ featured: true, limit: 8 }),
+          productApi.list({ newArrival: true, limit: 8 }),
+          productApi.list({ bestSeller: true, limit: 8 }),
           productApi.list({ limit: 12 }),
         ]);
 
@@ -81,13 +81,13 @@ export default function HomePage() {
 
       <FeaturedProducts products={featuredProducts} loading={loadingProducts} />
 
-      <DisciplineSection />
+      {/* <DisciplineSection /> */}
 
       <NewArrivals products={newArrivalProducts} loading={loadingProducts} />
 
-      <MembershipBanner />
-
       <BestSellers products={bestSellerProducts} loading={loadingProducts} />
+
+      <MembershipBanner />
 
       <Testimonials />
 
