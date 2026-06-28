@@ -88,26 +88,22 @@ export const userRegistration = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const otp = otpGenerate(6);
-    await sendEmail({
-      to: email,
-      subject: "Verification Email",
-      html: otp,
-    });
-
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
     const newUser = new User({
       name,
       email,
       password,
       role,
       phone,
-      otp,
-      otpExpiry,
       permissions: role ? getDefaultPermissions(role) : [],
+      isVerified: false,
+      isActive: true,
+      otp: null,
+      otpExpiry: null,
+      lastOtpSentAt: null,
     });
 
     await newUser.save();
+    await sendOtpToUser(newUser);
 
     return res.status(201).json({
       message: "User registered successfully",
@@ -124,6 +120,25 @@ export const userRegistration = async (req: Request, res: Response) => {
 
     return res.status(500).json({ message: "Server error" });
   }
+};
+
+const sendOtpToUser = async (user: IUser) => {
+  const otp = otpGenerate(6);
+  const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+  await sendEmail({
+    to: user.email,
+    subject: "TrendSole verification code",
+    html: `<p>Your TrendSole verification code is <strong>${otp}</strong>.</p>`,
+  });
+
+  user.otp = otp;
+  user.otpExpiry = otpExpiry;
+  user.lastOtpSentAt = new Date();
+  user.isVerified = false;
+  user.isActive = true;
+
+  await user.save();
 };
 
 export const otpVerificationForRegistration = async (
@@ -171,6 +186,48 @@ export const otpVerificationForRegistration = async (
   }
 };
 
+export const resendOtpForRegistration = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    if (!email || typeof email !== "string") {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: "This account is already verified" });
+    }
+
+    if (user.lastOtpSentAt) {
+      const nextAllowedAt = new Date(user.lastOtpSentAt.getTime() + 60_000);
+      if (nextAllowedAt.getTime() > Date.now()) {
+        const remainingSeconds = Math.ceil((nextAllowedAt.getTime() - Date.now()) / 1000);
+        return res.status(429).json({
+          message: "Please wait before requesting a new OTP",
+          remainingSeconds,
+        });
+      }
+    }
+
+    await sendOtpToUser(user);
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP resent successfully",
+      remainingSeconds: 0,
+    });
+  } catch (error: any) {
+    console.error("Error resending OTP:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 export const signup = async (req: Request, res: Response) => {
   try {
     const validatedData = signupSchema.parse(req.body);
@@ -184,24 +241,21 @@ export const signup = async (req: Request, res: Response) => {
       ...validatedData,
       role: "customer",
       permissions: getDefaultPermissions("customer"),
-      isVerified: true,
+      isVerified: false,
       isActive: true,
       otp: null,
       otpExpiry: null,
+      lastOtpSentAt: null,
     });
-    const authResponse = buildAuthResponse(user);
 
-    return res
-      .cookie("authToken", authResponse.token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      })
-      .status(201)
-      .json({
-        message: "Account created successfully",
-        ...authResponse,
-      });
+    await sendOtpToUser(user);
+
+    return res.status(201).json({
+      success: true,
+      message: "Account created successfully. Please verify your email with the OTP sent to you.",
+      email: user.email,
+      requiresVerification: true,
+    });
   } catch (error: any) {
     console.error("Error signing up user:", error);
 

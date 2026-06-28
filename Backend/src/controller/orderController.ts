@@ -94,6 +94,10 @@ export const createOrder = catchAsync(
       throw new AppError("Authentication required", 401);
     }
 
+    if (!req.authUser.isVerified) {
+      throw new AppError("Please verify your account before placing orders", 403);
+    }
+
     const validatedData = createOrderSchema.parse(req.body);
     const productIds = validatedData.items.map((item) => item.productId);
     const products = await Product.find({

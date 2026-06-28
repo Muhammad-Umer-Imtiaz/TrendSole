@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FiAlertCircle, FiArrowRight, FiUserPlus } from "react-icons/fi";
+import { FiAlertCircle, FiArrowRight, FiEye, FiEyeOff, FiUserPlus } from "react-icons/fi";
 import { signupFormSchema } from "@/lib/validations/auth";
-import { getDefaultRouteForRole, useAuthStore } from "@/store/auth.store";
+import { useAuthStore } from "@/store/auth.store";
 
 const emptyForm = {
   name: "",
@@ -23,21 +23,14 @@ export default function SignupPage() {
   const isLoading = useAuthStore((state) => state.isLoading);
   const error = useAuthStore((state) => state.error);
   const clearError = useAuthStore((state) => state.clearError);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const isHydrated = useAuthStore((state) => state.isHydrated);
-  const user = useAuthStore((state) => state.user);
   const [formData, setFormData] = useState(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     clearError();
   }, [clearError]);
-
-  useEffect(() => {
-    if (isHydrated && isAuthenticated) {
-      router.replace(getDefaultRouteForRole(user?.role));
-    }
-  }, [isAuthenticated, isHydrated, router, user?.role]);
 
   const handleChange = (
     field: keyof typeof formData,
@@ -65,7 +58,7 @@ export default function SignupPage() {
     }
 
     try {
-      const response = await signup({
+      await signup({
         name: validation.data.name,
         email: validation.data.email,
         password: validation.data.password,
@@ -73,7 +66,7 @@ export default function SignupPage() {
         address: validation.data.address,
       });
 
-      router.replace(getDefaultRouteForRole(response.user.role));
+      router.replace(`/otp?email=${encodeURIComponent(validation.data.email)}`);
     } catch {
       return;
     }
@@ -88,11 +81,11 @@ export default function SignupPage() {
               Trend Sole
             </p>
             <h1 className="mt-5 text-4xl font-semibold leading-tight">
-              Create your customer account and start ordering right away.
+              Create your customer account and verify it securely.
             </h1>
             <p className="mt-4 max-w-md text-base leading-8 text-white/70">
-              Signup creates a customer account automatically. Team roles stay
-              managed inside the admin workspace.
+              Signup creates a customer account automatically and sends a one-time
+              verification code to your email before you can place orders.
             </p>
           </div>
 
@@ -102,8 +95,8 @@ export default function SignupPage() {
             </div>
             <p className="mt-4 text-lg font-semibold">Customer-first onboarding</p>
             <p className="mt-2 text-sm leading-7 text-white/65">
-              After signup you will be signed in automatically and taken to the
-              storefront, where you can browse products and place orders.
+              After signup you will receive an OTP by email and complete the
+              final verification step before you can place orders.
             </p>
           </div>
         </div>
@@ -118,7 +111,7 @@ export default function SignupPage() {
             </h1>
             <p className="mt-3 text-base leading-7 text-slate-500">
               Your account is created with the <span className="font-semibold">customer</span>
-              {" "}role by default, so you can start shopping immediately.
+              {" "}role by default, and it will be verified through a one-time code sent to your email.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
@@ -181,28 +174,48 @@ export default function SignupPage() {
                   <label className="mb-2 block text-sm font-semibold text-slate-700">
                     Password
                   </label>
-                  <input
-                    type="password"
-                    value={formData.password}
-                    onChange={(event) => handleChange("password", event.target.value)}
-                    placeholder="Minimum 6 characters"
-                    className="h-14 w-full rounded-2xl border border-slate-200 bg-white px-4 text-slate-950 outline-none"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(event) => handleChange("password", event.target.value)}
+                      placeholder="Minimum 6 characters"
+                      className="h-14 w-full rounded-2xl border border-slate-200 bg-white px-4 pr-12 text-slate-950 outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((value) => !value)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-slate-950"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                    </button>
+                  </div>
                 </div>
 
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-700">
                     Confirm password
                   </label>
-                  <input
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={(event) =>
-                      handleChange("confirmPassword", event.target.value)
-                    }
-                    placeholder="Repeat password"
-                    className="h-14 w-full rounded-2xl border border-slate-200 bg-white px-4 text-slate-950 outline-none"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={formData.confirmPassword}
+                      onChange={(event) =>
+                        handleChange("confirmPassword", event.target.value)
+                      }
+                      placeholder="Repeat password"
+                      className="h-14 w-full rounded-2xl border border-slate-200 bg-white px-4 pr-12 text-slate-950 outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((value) => !value)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-slate-950"
+                      aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                    >
+                      {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                    </button>
+                  </div>
                 </div>
               </div>
 

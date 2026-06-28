@@ -14,6 +14,7 @@ import type {
   LoginResponse,
   Permission,
   SignupPayload,
+  SignupResponse,
 } from "@/lib/types";
 
 interface LogoutOptions {
@@ -29,7 +30,7 @@ interface AuthState {
   isHydrated: boolean;
   isLoading: boolean;
   error: string | null;
-  signup: (payload: SignupPayload) => Promise<LoginResponse>;
+  signup: (payload: SignupPayload) => Promise<SignupResponse>;
   login: (payload: LoginPayload) => Promise<LoginResponse>;
   applyAuthSession: (response: LoginResponse) => void;
   logout: (options?: LogoutOptions) => Promise<void>;
@@ -82,16 +83,16 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await authApi.signup(payload);
 
+          clearAuthCookie();
           set({
-            user: response.user,
-            token: response.token,
-            permissions: response.permissions,
-            isAuthenticated: true,
+            user: null,
+            token: null,
+            permissions: [],
+            isAuthenticated: false,
             isLoading: false,
             error: null,
           });
 
-          setAuthCookie(response.token, response.user.role);
           return response;
         } catch (error) {
           set({

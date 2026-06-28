@@ -5,6 +5,8 @@ import { useDeferredValue, useEffect, useState } from "react";
 import {
   FiArrowRight,
   FiClock,
+  FiEye,
+  FiEyeOff,
   FiMessageSquare,
   FiLock,
   FiLogOut,
@@ -46,6 +48,9 @@ export default function AccountPage() {
   const [profileSaving, setProfileSaving] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
@@ -418,7 +423,7 @@ export default function AccountPage() {
                         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
                           Contact
                         </p>
-                        <p className="mt-3 text-lg font-semibold text-slate-950">
+                        <p className="mt-3 text-xs font-semibold text-slate-950">
                           {user?.email ?? "No email found"}
                         </p>
                         <p className="mt-2 text-sm text-slate-500">
@@ -629,18 +634,28 @@ export default function AccountPage() {
                         <label className="mb-2 block text-sm font-semibold text-slate-700">
                           Current password
                         </label>
-                        <input
-                          type="password"
-                          value={passwordForm.currentPassword}
-                          onChange={(event) =>
-                            setPasswordForm((current) => ({
-                              ...current,
-                              currentPassword: event.target.value,
-                            }))
-                          }
-                          placeholder="Enter your current password"
-                          className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none"
-                        />
+                        <div className="relative">
+                          <input
+                            type={showCurrentPassword ? "text" : "password"}
+                            value={passwordForm.currentPassword}
+                            onChange={(event) =>
+                              setPasswordForm((current) => ({
+                                ...current,
+                                currentPassword: event.target.value,
+                              }))
+                            }
+                            placeholder="Enter your current password"
+                            className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 pr-12 text-sm outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowCurrentPassword((value) => !value)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-slate-950"
+                            aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
+                          >
+                            {showCurrentPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                          </button>
+                        </div>
                       </div>
 
                       <div className="grid gap-4 md:grid-cols-2">
@@ -648,36 +663,56 @@ export default function AccountPage() {
                           <label className="mb-2 block text-sm font-semibold text-slate-700">
                             New password
                           </label>
-                          <input
-                            type="password"
-                            value={passwordForm.newPassword}
-                            onChange={(event) =>
-                              setPasswordForm((current) => ({
-                                ...current,
-                                newPassword: event.target.value,
-                              }))
-                            }
-                            placeholder="Minimum 6 characters"
-                            className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none"
-                          />
+                          <div className="relative">
+                            <input
+                              type={showNewPassword ? "text" : "password"}
+                              value={passwordForm.newPassword}
+                              onChange={(event) =>
+                                setPasswordForm((current) => ({
+                                  ...current,
+                                  newPassword: event.target.value,
+                                }))
+                              }
+                              placeholder="Minimum 6 characters"
+                              className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 pr-12 text-sm outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowNewPassword((value) => !value)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-slate-950"
+                              aria-label={showNewPassword ? "Hide new password" : "Show new password"}
+                            >
+                              {showNewPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                            </button>
+                          </div>
                         </div>
 
                         <div>
                           <label className="mb-2 block text-sm font-semibold text-slate-700">
                             Confirm new password
                           </label>
-                          <input
-                            type="password"
-                            value={passwordForm.confirmPassword}
-                            onChange={(event) =>
-                              setPasswordForm((current) => ({
-                                ...current,
-                                confirmPassword: event.target.value,
-                              }))
-                            }
-                            placeholder="Repeat the new password"
-                            className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none"
-                          />
+                          <div className="relative">
+                            <input
+                              type={showConfirmPassword ? "text" : "password"}
+                              value={passwordForm.confirmPassword}
+                              onChange={(event) =>
+                                setPasswordForm((current) => ({
+                                  ...current,
+                                  confirmPassword: event.target.value,
+                                }))
+                              }
+                              placeholder="Repeat the new password"
+                              className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 pr-12 text-sm outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword((value) => !value)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 transition hover:text-slate-950"
+                              aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                            >
+                              {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                            </button>
+                          </div>
                         </div>
                       </div>
 

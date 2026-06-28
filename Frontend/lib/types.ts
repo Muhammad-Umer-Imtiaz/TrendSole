@@ -45,6 +45,13 @@ export interface LoginResponse {
   permissions: Permission[];
 }
 
+export interface SignupResponse {
+  success: boolean;
+  message: string;
+  email: string;
+  requiresVerification: boolean;
+}
+
 export interface SignupPayload {
   name: string;
   email: string;
@@ -71,6 +78,7 @@ export interface ProductImage {
 
 export interface ProductColorVariant {
   color: string;
+  colorHex?: string;
   stock: number;
 }
 

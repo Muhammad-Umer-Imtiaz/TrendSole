@@ -25,6 +25,7 @@ import type {
   ProductListParams,
   ProfileUpdatePayload,
   SignupPayload,
+  SignupResponse,
   StaffMember,
   UserRole,
 } from "@/lib/types";
@@ -98,6 +99,10 @@ const normalizeProduct = (product: Record<string, unknown>): Product => {
     ? product.colorVariants
         .map((variant) => ({
           color: String((variant as { color?: string }).color ?? "").trim(),
+          colorHex:
+            typeof (variant as { colorHex?: string }).colorHex === "string"
+              ? (variant as { colorHex?: string }).colorHex
+              : undefined,
           stock: Number((variant as { stock?: number }).stock ?? 0),
         }))
         .filter((variant) => variant.color.length > 0)
@@ -431,7 +436,7 @@ export const authApi = {
     ]),
 
   signup: (payload: SignupPayload) =>
-    requestWithFallback<LoginResponse>([
+    requestWithFallback<SignupResponse>([
       {
         method: "POST",
         url: "/users/signup",
@@ -534,6 +539,15 @@ export const authApi = {
       {
         method: "POST",
         url: "/users/verifyOtp",
+        data: payload,
+      },
+    ]),
+
+  resendOtp: (payload: { email: string }) =>
+    requestWithFallback<ApiMessageResponse>([
+      {
+        method: "POST",
+        url: "/users/resendOtp",
         data: payload,
       },
     ]),

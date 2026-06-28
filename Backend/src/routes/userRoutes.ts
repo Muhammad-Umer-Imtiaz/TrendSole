@@ -23,6 +23,7 @@ import {
   login,
   logout,
   otpVerificationForRegistration,
+  resendOtpForRegistration,
   resetPassword,
   signup,
   updateCustomer,
@@ -43,6 +44,7 @@ router.post(
 );
 router.post("/signup", validate(signupSchema), signup);
 router.post("/verifyOtp",otpVerificationForRegistration)
+router.post("/resendOtp", resendOtpForRegistration)
 router.post("/login",validate(loginSchema),login)
 router.post("/logout",logout);
 router.post("/forget-password",forgetPassword)

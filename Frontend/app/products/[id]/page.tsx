@@ -109,7 +109,7 @@ export default function ProductDetailPage() {
     setSuccessMessage(null);
     setContactPhone(user?.phone ?? "");
     setShippingAddress(user?.address ?? "");
-    setSelectedColor(product?.colors[0] ?? null);
+    setSelectedColor((currentColor) => currentColor ?? product?.colors[0] ?? null);
   };
 
   const openOrderModal = () => {
@@ -157,6 +157,7 @@ export default function ProductDetailPage() {
       });
 
       setSuccessMessage("Your order has been placed successfully.");
+      closeOrderModal();
       setProduct((currentProduct) => {
         if (!currentProduct) {
           return currentProduct;
@@ -203,6 +204,12 @@ export default function ProductDetailPage() {
           <FiArrowLeft />
           Back to products
         </Link>
+
+        {successMessage ? (
+          <div className="mt-5 rounded-[24px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {successMessage}
+          </div>
+        ) : null}
 
         {loading ? (
           <div className="mt-8 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
@@ -321,6 +328,7 @@ export default function ProductDetailPage() {
                           const isSelected = selectedColor === color;
                           const variantStock = variant?.stock ?? product.stock;
                           const isSoldOut = hasVariantInventory && variantStock <= 0;
+                          const colorHex = variant?.colorHex;
 
                           return (
                             <button
@@ -329,9 +337,15 @@ export default function ProductDetailPage() {
                               onClick={() => setSelectedColor(color)}
                               className={`rounded-2xl border px-4 py-3 text-left transition-colors ${
                                 isSelected
-                                  ? "border-slate-950 bg-slate-950 text-white"
+                                  ? "border-slate-950 text-white"
                                   : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-950"
                               }`}
+                              style={{
+                                backgroundColor: isSelected
+                                  ? colorHex ?? "#0f172a"
+                                  : colorHex ?? undefined,
+                                borderColor: isSelected ? "#0f172a" : colorHex ?? "#e2e8f0",
+                              }}
                             >
                               <p className="text-sm font-semibold">{color}</p>
                               <p
@@ -355,46 +369,10 @@ export default function ProductDetailPage() {
 
                 <div className="overflow-hidden rounded-[32px] border border-black/8 bg-[linear-gradient(135deg,#0f172a_0%,#1f2937_100%)] text-white shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
                   <div className="grid gap-6 p-8">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">
                           Ready to order
                         </p>
-                        <h2 className="mt-3 text-3xl font-semibold">
-                          Checkout this pair directly
-                        </h2>
-                        <p className="mt-3 max-w-xl text-sm leading-7 text-white/70">
-                          Select your preferred color, confirm delivery details, and place the order from a focused checkout form.
-                        </p>
-                      </div>
-                      <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-white/10">
-                        <FiShoppingBag className="text-xl" />
-                      </div>
-                    </div>
-
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <div className="rounded-[24px] border border-white/10 bg-white/5 p-4">
-                        <FiPackage className="text-lg text-white/80" />
-                        <p className="mt-4 text-sm font-semibold">Inventory aware</p>
-                        <p className="mt-2 text-xs leading-6 text-white/65">
-                          Orders respect the stock available for the selected color.
-                        </p>
-                      </div>
-                      <div className="rounded-[24px] border border-white/10 bg-white/5 p-4">
-                        <FiTruck className="text-lg text-white/80" />
-                        <p className="mt-4 text-sm font-semibold">Fast fulfillment</p>
-                        <p className="mt-2 text-xs leading-6 text-white/65">
-                          Shipping details are collected in one clean confirmation step.
-                        </p>
-                      </div>
-                      <div className="rounded-[24px] border border-white/10 bg-white/5 p-4">
-                        <FiCheckCircle className="text-lg text-white/80" />
-                        <p className="mt-4 text-sm font-semibold">Tracked selection</p>
-                        <p className="mt-2 text-xs leading-6 text-white/65">
-                          The chosen color is now saved with each order for operations visibility.
-                        </p>
-                      </div>
-                    </div>
+                   
 
                     {!isAuthenticated ? (
                       <div className="rounded-[24px] border border-white/10 bg-white/5 p-5 text-sm text-white/75">
@@ -508,6 +486,7 @@ export default function ProductDetailPage() {
                       ? variant?.stock ?? 0
                       : product.stock;
                     const isSelected = selectedColor === color;
+                    const colorHex = variant?.colorHex;
 
                     return (
                       <button
@@ -516,9 +495,15 @@ export default function ProductDetailPage() {
                         onClick={() => setSelectedColor(color)}
                         className={`rounded-[22px] border px-4 py-4 text-left transition-colors ${
                           isSelected
-                            ? "border-slate-950 bg-slate-950 text-white"
+                            ? "border-slate-950 text-white"
                             : "border-slate-200 bg-white text-slate-700 hover:border-slate-950"
                         }`}
+                        style={{
+                          backgroundColor: isSelected
+                            ? colorHex ?? "#0f172a"
+                            : colorHex ?? undefined,
+                          borderColor: isSelected ? "#0f172a" : colorHex ?? "#e2e8f0",
+                        }}
                       >
                         <p className="text-sm font-semibold">{color}</p>
                         <p

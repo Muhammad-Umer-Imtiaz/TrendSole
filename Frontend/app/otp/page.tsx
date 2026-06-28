@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { FiAlertCircle, FiArrowRight, FiKey, FiShield } from "react-icons/fi";
 import AuthShell from "@/components/auth/AuthShell";
 import { apiErrorMessage, authApi } from "@/lib/api";
@@ -11,16 +11,99 @@ import { getDefaultRouteForRole, useAuthStore } from "@/store/auth.store";
 
 export default function OtpPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const applyAuthSession = useAuthStore((state) => state.applyAuthSession);
-  const [otp, setOtp] = useState("");
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [submitting, setSubmitting] = useState(false);
+  const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(60);
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+
+  useEffect(() => {
+    inputRefs.current[0]?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setResendCooldown((value) => value - 1);
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [resendCooldown]);
+
+  const handleOtpChange = (index: number, value: string) => {
+    const sanitizedValue = value.replace(/\D/g, "").slice(-1);
+    const nextOtp = [...otp];
+    nextOtp[index] = sanitizedValue;
+    setOtp(nextOtp);
+
+    if (sanitizedValue && index < otp.length - 1) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
+    event.preventDefault();
+    const pastedValue = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+
+    if (!pastedValue) {
+      return;
+    }
+
+    const nextOtp = Array(6).fill("");
+    pastedValue.split("").forEach((digit, index) => {
+      nextOtp[index] = digit;
+    });
+
+    setOtp(nextOtp);
+    inputRefs.current[Math.min(pastedValue.length, 5)]?.focus();
+  };
+
+  const handleOtpKeyDown = (
+    index: number,
+    event: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (event.key === "Backspace" && !otp[index] && index > 0) {
+      const previousOtp = [...otp];
+      previousOtp[index - 1] = "";
+      setOtp(previousOtp);
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleResendOtp = async () => {
+    const email = searchParams.get("email");
+
+    if (!email) {
+      setError("Email is missing for resend. Please go back and sign up again.");
+      return;
+    }
+
+    try {
+      setResending(true);
+      setError(null);
+      const response = await authApi.resendOtp({ email });
+      setResendCooldown(60);
+      setError(response.message);
+    } catch (requestError) {
+      const message = apiErrorMessage(requestError);
+      setError(message);
+    } finally {
+      setResending(false);
+    }
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
 
-    const validation = otpFormSchema.safeParse({ otp });
+    const otpValue = otp.join("");
+    const validation = otpFormSchema.safeParse({ otp: otpValue });
 
     if (!validation.success) {
       setError(
@@ -52,33 +135,30 @@ export default function OtpPage() {
       sideCardTitle="6-digit confirmation"
       sideCardDescription="OTP codes expire quickly, so enter the most recent one delivered to your email address."
       sideIcon={FiShield}
-      footer={
-        <div className="flex flex-wrap items-center gap-4 text-sm">
-          <Link href="/login" className="font-semibold text-slate-950 hover:text-slate-700">
-            Already verified? Sign in
-          </Link>
-          <Link href="/forgot-password" className="font-semibold text-slate-600 hover:text-slate-950">
-            Need password help?
-          </Link>
-        </div>
-      }
+     
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="mb-2 block text-sm font-semibold text-slate-700">
             Verification code
           </label>
-          <div className="flex items-center rounded-2xl border border-slate-200 bg-white px-4">
-            <FiKey className="text-slate-400" />
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              value={otp}
-              onChange={(event) => setOtp(event.target.value.replace(/\D/g, ""))}
-              placeholder="123456"
-              className="h-14 w-full bg-transparent pl-3 text-slate-950 outline-none tracking-[0.45em]"
-            />
+          <div className="flex items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-3 sm:gap-3">
+            {otp.map((digit, index) => (
+              <input
+                key={index}
+                ref={(element) => {
+                  inputRefs.current[index] = element;
+                }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(event) => handleOtpChange(index, event.target.value)}
+                onPaste={index === 0 ? handleOtpPaste : undefined}
+                onKeyDown={(event) => handleOtpKeyDown(index, event)}
+                className="h-14 w-12 rounded-xl border border-slate-200 text-center text-lg font-semibold text-slate-950 outline-none focus:border-slate-950 sm:w-14"
+              />
+            ))}
           </div>
         </div>
 
@@ -97,6 +177,24 @@ export default function OtpPage() {
           {submitting ? "Verifying..." : "Verify account"}
           {!submitting && <FiArrowRight />}
         </button>
+
+        <div className="flex items-center justify-between gap-3 text-sm text-slate-600">
+          <p>
+            Didn’t receive the code?
+          </p>
+          <button
+            type="button"
+            onClick={handleResendOtp}
+            disabled={resending || resendCooldown > 0}
+            className="font-semibold text-slate-950 transition hover:text-slate-700 disabled:cursor-not-allowed disabled:text-slate-400"
+          >
+            {resending
+              ? "Sending..."
+              : resendCooldown > 0
+                ? `Resend in 00:${String(resendCooldown).padStart(2, "0")}`
+                : "Resend OTP"}
+          </button>
+        </div>
       </form>
     </AuthShell>
   );
