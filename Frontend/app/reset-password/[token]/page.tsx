@@ -77,7 +77,7 @@ export default function ResetPasswordTokenPage() {
           <label className="mb-2 block text-sm font-semibold text-slate-700">
             New password
           </label>
-          <div className="flex items-center rounded-2xl border border-slate-200 bg-white px-4">
+          <div className="input-surface flex items-center rounded-2xl px-4">
             <FiLock className="text-slate-400" />
             <input
               type="password"
@@ -93,7 +93,7 @@ export default function ResetPasswordTokenPage() {
           <label className="mb-2 block text-sm font-semibold text-slate-700">
             Confirm new password
           </label>
-          <div className="flex items-center rounded-2xl border border-slate-200 bg-white px-4">
+          <div className="input-surface flex items-center rounded-2xl px-4">
             <FiLock className="text-slate-400" />
             <input
               type="password"
@@ -121,7 +121,7 @@ export default function ResetPasswordTokenPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="button-primary inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl px-5 text-sm font-semibold disabled:opacity-60"
         >
           {submitting ? "Updating password..." : "Update password"}
           {!submitting && <FiArrowRight />}

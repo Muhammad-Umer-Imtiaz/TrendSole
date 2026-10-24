@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FiAlertCircle, FiArrowRight, FiUserPlus } from "react-icons/fi";
+import AuthShell from "@/components/auth/AuthShell";
 import { signupFormSchema } from "@/lib/validations/auth";
 import { getDefaultRouteForRole, useAuthStore } from "@/store/auth.store";
 
@@ -80,48 +81,27 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f3ee] px-6 py-10">
-      <div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-6xl overflow-hidden rounded-[32px] border border-black/8 bg-white lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="hidden border-r border-black/8 bg-[#18140f] px-10 py-12 text-white lg:flex lg:flex-col">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-white/65">
-              Trend Sole
-            </p>
-            <h1 className="mt-5 text-4xl font-semibold leading-tight">
-              Create your customer account and start ordering right away.
-            </h1>
-            <p className="mt-4 max-w-md text-base leading-8 text-white/70">
-              Signup creates a customer account automatically. Team roles stay
-              managed inside the admin workspace.
-            </p>
-          </div>
-
-          <div className="mt-auto rounded-[28px] border border-white/10 bg-white/5 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10">
-              <FiUserPlus />
-            </div>
-            <p className="mt-4 text-lg font-semibold">Customer-first onboarding</p>
-            <p className="mt-2 text-sm leading-7 text-white/65">
-              After signup you will be signed in automatically and taken to the
-              storefront, where you can browse products and place orders.
-            </p>
-          </div>
+    <AuthShell
+      eyebrow="Customer Signup"
+      title="Create your account"
+      description="Your account is created with the customer role by default, so you can start shopping right away."
+      sideTitle="Create your customer account and start ordering right away."
+      sideDescription="Signup stays simple and focused, while staff and admin roles remain managed in the operations workspace."
+      sideCardTitle="Customer-first onboarding"
+      sideCardDescription="After signup you will be signed in automatically and taken into the storefront experience."
+      sideIcon={FiUserPlus}
+      footer={
+        <div className="flex flex-wrap items-center gap-4 text-sm">
+          <Link href="/login" className="font-semibold text-slate-950 hover:text-slate-700">
+            Already have an account?
+          </Link>
+          <Link href="/" className="font-semibold text-slate-600 hover:text-slate-950">
+            Back to storefront
+          </Link>
         </div>
-
-        <div className="flex items-center px-6 py-10 sm:px-10 lg:px-14">
-          <div className="mx-auto w-full max-w-xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-slate-500">
-              Customer Signup
-            </p>
-            <h1 className="mt-4 text-4xl font-semibold text-slate-950">
-              Create your account
-            </h1>
-            <p className="mt-3 text-base leading-7 text-slate-500">
-              Your account is created with the <span className="font-semibold">customer</span>
-              {" "}role by default, so you can start shopping immediately.
-            </p>
-
-            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Full name
@@ -131,7 +111,7 @@ export default function SignupPage() {
                   value={formData.name}
                   onChange={(event) => handleChange("name", event.target.value)}
                   placeholder="Muhammad Umer"
-                  className="h-14 w-full rounded-2xl border border-slate-200 bg-white px-4 text-slate-950 outline-none"
+                  className="input-surface h-14 w-full rounded-2xl px-4 text-slate-950 outline-none"
                 />
               </div>
 
@@ -145,7 +125,7 @@ export default function SignupPage() {
                     value={formData.email}
                     onChange={(event) => handleChange("email", event.target.value)}
                     placeholder="you@example.com"
-                    className="h-14 w-full rounded-2xl border border-slate-200 bg-white px-4 text-slate-950 outline-none"
+                    className="input-surface h-14 w-full rounded-2xl px-4 text-slate-950 outline-none"
                   />
                 </div>
 
@@ -158,7 +138,7 @@ export default function SignupPage() {
                     value={formData.phone}
                     onChange={(event) => handleChange("phone", event.target.value)}
                     placeholder="+92 300 0000000"
-                    className="h-14 w-full rounded-2xl border border-slate-200 bg-white px-4 text-slate-950 outline-none"
+                    className="input-surface h-14 w-full rounded-2xl px-4 text-slate-950 outline-none"
                   />
                 </div>
               </div>
@@ -172,7 +152,7 @@ export default function SignupPage() {
                   onChange={(event) => handleChange("address", event.target.value)}
                   rows={3}
                   placeholder="Shipping address"
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-slate-950 outline-none"
+                  className="input-surface w-full rounded-2xl px-4 py-4 text-slate-950 outline-none"
                 />
               </div>
 
@@ -186,7 +166,7 @@ export default function SignupPage() {
                     value={formData.password}
                     onChange={(event) => handleChange("password", event.target.value)}
                     placeholder="Minimum 6 characters"
-                    className="h-14 w-full rounded-2xl border border-slate-200 bg-white px-4 text-slate-950 outline-none"
+                    className="input-surface h-14 w-full rounded-2xl px-4 text-slate-950 outline-none"
                   />
                 </div>
 
@@ -201,12 +181,12 @@ export default function SignupPage() {
                       handleChange("confirmPassword", event.target.value)
                     }
                     placeholder="Repeat password"
-                    className="h-14 w-full rounded-2xl border border-slate-200 bg-white px-4 text-slate-950 outline-none"
+                    className="input-surface h-14 w-full rounded-2xl px-4 text-slate-950 outline-none"
                   />
                 </div>
               </div>
 
-              <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+              <label className="flex items-start gap-3 rounded-2xl border border-[rgba(74,96,105,0.1)] bg-[rgba(248,246,242,0.88)] px-4 py-4 text-sm text-slate-600">
                 <input
                   type="checkbox"
                   checked={formData.agreedToTerms}
@@ -231,24 +211,12 @@ export default function SignupPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                className="button-primary inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl px-5 text-sm font-semibold disabled:opacity-60"
               >
                 {isLoading ? "Creating account..." : "Create account"}
                 {!isLoading && <FiArrowRight />}
               </button>
             </form>
-
-            <div className="mt-8 flex flex-wrap items-center gap-4 text-sm">
-              <Link href="/login" className="font-semibold text-slate-950 hover:text-slate-700">
-                Already have an account?
-              </Link>
-              <Link href="/" className="font-semibold text-slate-600 hover:text-slate-950">
-                Back to storefront
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    </AuthShell>
   );
 }

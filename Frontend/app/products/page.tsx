@@ -1,7 +1,8 @@
 "use client";
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { FiFilter, FiSearch, FiSliders } from "react-icons/fi";
+import { useSearchParams } from "next/navigation";
+import { FiFilter, FiSearch, FiSliders, FiX } from "react-icons/fi";
 import Footer from "@/components/landingPage/Footer";
 import Navbar from "@/components/landingPage/Navbar";
 import PaginationControls from "@/components/ui/PaginationControls";
@@ -17,12 +18,13 @@ const DEFAULT_PAGINATION: PaginationMeta = {
 };
 
 export default function ProductsPage() {
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta>(DEFAULT_PAGINATION);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get("search") ?? "");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -123,22 +125,47 @@ export default function ProductsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f5f3ee] text-slate-950">
+    <main className="app-shell min-h-screen text-slate-950">
       <Navbar />
 
-      <section className="mx-auto max-w-7xl px-6 py-12">
-        <div className="grid gap-8 lg:grid-cols-[300px_1fr]">
-          <aside className="h-fit rounded-[28px] border border-black/8 bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
+      <section className="mx-auto max-w-7xl px-6 py-8">
+        <div className="soft-panel rounded-[36px] px-6 py-8 sm:px-8">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="section-kicker">Product Catalog</p>
+              <h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl font-semibold text-slate-950 sm:text-5xl">
+                Find your next pair in a cleaner browsing experience.
+              </h1>
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+                Search the catalog, narrow by category, and filter by price in a simpler layout designed to keep product exploration easy on the eyes.
+              </p>
+            </div>
+
+            <div className="grid gap-3 rounded-[28px] border border-[rgba(74,96,105,0.1)] bg-[rgba(248,246,242,0.88)] px-5 py-4 text-sm text-slate-600 sm:grid-cols-2">
+              <div>
+                <p className="font-semibold text-slate-950">{pagination.total}</p>
+                <p>Products found</p>
+              </div>
+              <div>
+                <p className="font-semibold text-slate-950">{activeFilterCount}</p>
+                <p>Active filters</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 pb-10">
+        <div className="grid gap-8 lg:grid-cols-[310px_1fr]">
+          <aside className="soft-card h-fit rounded-[32px] p-6 lg:sticky lg:top-28">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-                  Filters
-                </p>
-                <h1 className="mt-2 text-2xl font-semibold text-slate-950">
-                  Refine the catalog
-                </h1>
+                <p className="section-kicker">Filters</p>
+                <h2 className="mt-2 text-2xl font-semibold text-slate-950">
+                  Refine your selection
+                </h2>
               </div>
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgba(228,239,234,0.95)] text-slate-800">
                 <FiSliders />
               </div>
             </div>
@@ -148,7 +175,7 @@ export default function ProductsPage() {
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
                   Search
                 </label>
-                <div className="flex items-center rounded-2xl border border-slate-200 bg-white px-4">
+                <div className="input-surface flex items-center rounded-2xl px-4">
                   <FiSearch className="text-slate-400" />
                   <input
                     type="search"
@@ -177,7 +204,7 @@ export default function ProductsPage() {
                       setPage(1);
                     }}
                     placeholder="Minimum PKR"
-                    className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none"
+                    className="input-surface h-12 rounded-2xl px-4 text-sm outline-none"
                   />
                   <input
                     type="number"
@@ -188,7 +215,7 @@ export default function ProductsPage() {
                       setPage(1);
                     }}
                     placeholder="Maximum PKR"
-                    className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none"
+                    className="input-surface h-12 rounded-2xl px-4 text-sm outline-none"
                   />
                 </div>
               </div>
@@ -198,30 +225,38 @@ export default function ProductsPage() {
                   Categories
                 </p>
                 <div className="space-y-3">
-                  {categories.map((category) => (
-                    <label
-                      key={category.id}
-                      className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-700"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedCategories.includes(category.name)}
-                        onChange={() => toggleCategory(category.name)}
-                        className="h-4 w-4 rounded border-slate-300"
-                      />
-                      <span className="flex-1">{category.name}</span>
-                      <span className="text-xs text-slate-400">
-                        {category.productCount}
-                      </span>
-                    </label>
-                  ))}
+                  {categories.map((category) => {
+                    const isSelected = selectedCategories.includes(category.name);
+
+                    return (
+                      <label
+                        key={category.id}
+                        className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm transition-colors ${
+                          isSelected
+                            ? "border-[rgba(95,132,121,0.35)] bg-[rgba(228,239,234,0.68)] text-slate-900"
+                            : "border-[rgba(74,96,105,0.1)] bg-white/78 text-slate-700"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleCategory(category.name)}
+                          className="h-4 w-4 rounded border-slate-300"
+                        />
+                        <span className="flex-1">{category.name}</span>
+                        <span className="text-xs text-slate-400">
+                          {category.productCount}
+                        </span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={clearFilters}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-950 hover:text-slate-950"
+                className="button-secondary inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition-colors"
               >
                 <FiFilter />
                 Clear filters
@@ -229,23 +264,53 @@ export default function ProductsPage() {
             </div>
           </aside>
 
-          <div>
-            <div className="rounded-[28px] border border-black/8 bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
+          <div className="space-y-5">
+            {(searchTerm || selectedCategories.length > 0 || minPrice || maxPrice) && (
+              <div className="soft-card rounded-[28px] p-5">
+                <div className="flex flex-wrap gap-2">
+                  {searchTerm ? (
+                    <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(74,96,105,0.1)] bg-white/92 px-3 py-2 text-xs font-semibold text-slate-700">
+                      Search: {searchTerm}
+                    </span>
+                  ) : null}
+                  {selectedCategories.map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      onClick={() => toggleCategory(category)}
+                      className="inline-flex items-center gap-2 rounded-full border border-[rgba(74,96,105,0.1)] bg-white/92 px-3 py-2 text-xs font-semibold text-slate-700"
+                    >
+                      {category}
+                      <FiX />
+                    </button>
+                  ))}
+                  {minPrice ? (
+                    <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(74,96,105,0.1)] bg-white/92 px-3 py-2 text-xs font-semibold text-slate-700">
+                      Min PKR {minPrice}
+                    </span>
+                  ) : null}
+                  {maxPrice ? (
+                    <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(74,96,105,0.1)] bg-white/92 px-3 py-2 text-xs font-semibold text-slate-700">
+                      Max PKR {maxPrice}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            )}
+
+            <div className="soft-card rounded-[32px] p-6">
               <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-                    Product Catalog
-                  </p>
+                  <p className="section-kicker">Collection View</p>
                   <h2 className="mt-2 text-3xl font-semibold text-slate-950">
-                    Find your next pair
+                    Product results
                   </h2>
                   <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
-                    Search the catalog, narrow by category, and filter by price
-                    range with live data from the backend.
+                    Every result card is simplified to highlight the product, key details, and next action without unnecessary motion or heavy contrast.
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                <div className="rounded-2xl border border-[rgba(74,96,105,0.1)] bg-[rgba(248,246,242,0.88)] px-4 py-3 text-sm text-slate-500">
                   {pagination.total} products found
                   {activeFilterCount > 0 ? ` • ${activeFilterCount} active filters` : ""}
                 </div>
@@ -258,26 +323,26 @@ export default function ProductsPage() {
               ) : null}
 
               {loading ? (
-                <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                   {Array.from({ length: 6 }).map((_, index) => (
                     <div
                       key={index}
-                      className="h-[360px] animate-pulse rounded-[24px] bg-slate-100"
+                      className="h-[420px] animate-pulse rounded-[30px] bg-[rgba(228,239,234,0.6)]"
                     />
                   ))}
                 </div>
               ) : products.length === 0 ? (
-                <div className="mt-8 rounded-[24px] border border-dashed border-slate-300 px-6 py-14 text-center text-sm text-slate-500">
-                  No products match the current filters. Try widening the search
-                  or clearing one of the category or price constraints.
+                <div className="mt-6 rounded-[28px] border border-dashed border-[rgba(74,96,105,0.2)] bg-[rgba(255,255,255,0.7)] px-6 py-12 text-center text-sm text-slate-500">
+                  No products match your current filters.
                 </div>
               ) : (
                 <>
-                  <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                    {products.map((product) => (
+                  <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                    {products.map((product, index) => (
                       <ProductShowcaseCard
                         key={product.id}
                         product={product}
+                        index={index}
                         compact
                       />
                     ))}

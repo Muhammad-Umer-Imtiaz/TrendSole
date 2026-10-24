@@ -192,13 +192,13 @@ export default function ProductDetailPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f5f3ee] text-slate-950">
+    <main className="app-shell min-h-screen text-slate-950">
       <Navbar />
 
-      <section className="mx-auto max-w-7xl px-6 py-12">
+      <section className="mx-auto max-w-7xl px-6 py-8">
         <Link
           href="/products"
-          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-950 hover:text-slate-950"
+          className="button-secondary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-colors"
         >
           <FiArrowLeft />
           Back to products
@@ -206,8 +206,8 @@ export default function ProductDetailPage() {
 
         {loading ? (
           <div className="mt-8 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="h-[560px] animate-pulse rounded-[32px] bg-slate-100" />
-            <div className="h-[560px] animate-pulse rounded-[32px] bg-slate-100" />
+            <div className="h-[560px] animate-pulse rounded-[32px] bg-[rgba(228,239,234,0.6)]" />
+            <div className="h-[560px] animate-pulse rounded-[32px] bg-[rgba(228,239,234,0.6)]" />
           </div>
         ) : error || !product ? (
           <div className="mt-8 rounded-[28px] border border-red-200 bg-red-50 px-6 py-5 text-sm text-red-700">
@@ -216,8 +216,8 @@ export default function ProductDetailPage() {
         ) : (
           <>
             <div className="mt-8 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-              <div className="rounded-[32px] border border-black/8 bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
-                <div className="relative flex min-h-[460px] items-center justify-center overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_top,_rgba(196,166,122,0.18),_transparent_42%),linear-gradient(135deg,#faf6ef_0%,#efe8dd_100%)]">
+              <div className="soft-card rounded-[32px] p-5">
+                <div className="relative flex min-h-[460px] items-center justify-center overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_top,_rgba(215,228,221,0.88),_transparent_42%),linear-gradient(135deg,#fbfaf7_0%,#edf3f0_100%)]">
                   {product.productImages[selectedImage]?.url ? (
                     <Image
                       src={product.productImages[selectedImage].url}
@@ -237,10 +237,10 @@ export default function ProductDetailPage() {
                         key={image.publicId || image.url}
                         type="button"
                         onClick={() => setSelectedImage(index)}
-                        className={`relative h-24 overflow-hidden rounded-2xl border ${
+                        className={`relative h-24 overflow-hidden rounded-2xl border transition-colors ${
                           selectedImage === index
-                            ? "border-slate-950"
-                            : "border-slate-200"
+                            ? "border-[rgba(95,132,121,0.45)] bg-[rgba(228,239,234,0.6)]"
+                            : "border-[rgba(74,96,105,0.1)] bg-white/75"
                         }`}
                       >
                         <Image
@@ -256,8 +256,8 @@ export default function ProductDetailPage() {
               </div>
 
               <div className="space-y-6">
-                <div className="rounded-[32px] border border-black/8 bg-white p-8 shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+                <div className="soft-card rounded-[32px] p-8">
+                  <p className="section-kicker">
                     {product.productCategory}
                   </p>
                   <h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl font-semibold tracking-[-0.03em] text-slate-950">
@@ -268,24 +268,24 @@ export default function ProductDetailPage() {
                   </p>
 
                   <div className="mt-6 flex flex-wrap items-center gap-3">
-                    <span className="rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white">
+                    <span className="rounded-full bg-[rgba(228,239,234,0.95)] px-4 py-2 text-sm font-semibold text-slate-900">
                       {formatCurrency(effectiveUnitPrice)}
                     </span>
                     {effectiveUnitPrice < product.productPrice ? (
-                      <span className="rounded-full bg-stone-100 px-4 py-2 text-sm font-semibold text-stone-500 line-through">
+                      <span className="rounded-full bg-[rgba(248,246,242,0.95)] px-4 py-2 text-sm font-semibold text-slate-500 line-through">
                         {formatCurrency(product.productPrice)}
                       </span>
                     ) : null}
                     {product.offerLabel ? (
-                      <span className="rounded-full bg-amber-300 px-4 py-2 text-sm font-semibold text-slate-950">
+                      <span className="rounded-full bg-[rgba(242,226,189,0.82)] px-4 py-2 text-sm font-semibold text-slate-950">
                         {product.offerLabel}
                       </span>
                     ) : null}
                     <span
-                      className={`rounded-full px-4 py-2 text-sm font-semibold ${
+                      className={`rounded-full border px-4 py-2 text-sm font-semibold ${
                         product.stock > 0
-                          ? "bg-emerald-50 text-emerald-700"
-                          : "bg-red-50 text-red-700"
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                          : "border-red-200 bg-red-50 text-red-700"
                       }`}
                     >
                       {product.stock > 0
@@ -329,14 +329,14 @@ export default function ProductDetailPage() {
                               onClick={() => setSelectedColor(color)}
                               className={`rounded-2xl border px-4 py-3 text-left transition-colors ${
                                 isSelected
-                                  ? "border-slate-950 bg-slate-950 text-white"
-                                  : "border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-950"
+                                  ? "border-[rgba(95,132,121,0.45)] bg-[rgba(228,239,234,0.95)] text-slate-900"
+                                  : "border-[rgba(74,96,105,0.1)] bg-white/78 text-slate-700 hover:border-[rgba(95,132,121,0.35)]"
                               }`}
                             >
                               <p className="text-sm font-semibold">{color}</p>
                               <p
                                 className={`mt-1 text-xs ${
-                                  isSelected ? "text-white/70" : "text-slate-500"
+                                  isSelected ? "text-slate-600" : "text-slate-500"
                                 }`}
                               >
                                 {hasVariantInventory
@@ -353,56 +353,56 @@ export default function ProductDetailPage() {
                   ) : null}
                 </div>
 
-                <div className="overflow-hidden rounded-[32px] border border-black/8 bg-[linear-gradient(135deg,#0f172a_0%,#1f2937_100%)] text-white shadow-[0_24px_70px_rgba(15,23,42,0.16)]">
+                <div className="overflow-hidden rounded-[32px] border border-[rgba(74,96,105,0.1)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(238,244,241,0.9)_100%)] text-slate-900 shadow-[0_24px_70px_rgba(84,101,111,0.08)]">
                   <div className="grid gap-6 p-8">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">
+                        <p className="section-kicker">
                           Ready to order
                         </p>
-                        <h2 className="mt-3 text-3xl font-semibold">
+                        <h2 className="mt-3 text-3xl font-semibold text-slate-950">
                           Checkout this pair directly
                         </h2>
-                        <p className="mt-3 max-w-xl text-sm leading-7 text-white/70">
+                        <p className="mt-3 max-w-xl text-sm leading-7 text-slate-600">
                           Select your preferred color, confirm delivery details, and place the order from a focused checkout form.
                         </p>
                       </div>
-                      <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-white/10">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-[rgba(228,239,234,0.95)] text-slate-800">
                         <FiShoppingBag className="text-xl" />
                       </div>
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-3">
-                      <div className="rounded-[24px] border border-white/10 bg-white/5 p-4">
-                        <FiPackage className="text-lg text-white/80" />
+                      <div className="rounded-[24px] border border-[rgba(74,96,105,0.1)] bg-white/75 p-4">
+                        <FiPackage className="text-lg text-slate-700" />
                         <p className="mt-4 text-sm font-semibold">Inventory aware</p>
-                        <p className="mt-2 text-xs leading-6 text-white/65">
+                        <p className="mt-2 text-xs leading-6 text-slate-600">
                           Orders respect the stock available for the selected color.
                         </p>
                       </div>
-                      <div className="rounded-[24px] border border-white/10 bg-white/5 p-4">
-                        <FiTruck className="text-lg text-white/80" />
+                      <div className="rounded-[24px] border border-[rgba(74,96,105,0.1)] bg-white/75 p-4">
+                        <FiTruck className="text-lg text-slate-700" />
                         <p className="mt-4 text-sm font-semibold">Fast fulfillment</p>
-                        <p className="mt-2 text-xs leading-6 text-white/65">
+                        <p className="mt-2 text-xs leading-6 text-slate-600">
                           Shipping details are collected in one clean confirmation step.
                         </p>
                       </div>
-                      <div className="rounded-[24px] border border-white/10 bg-white/5 p-4">
-                        <FiCheckCircle className="text-lg text-white/80" />
+                      <div className="rounded-[24px] border border-[rgba(74,96,105,0.1)] bg-white/75 p-4">
+                        <FiCheckCircle className="text-lg text-slate-700" />
                         <p className="mt-4 text-sm font-semibold">Tracked selection</p>
-                        <p className="mt-2 text-xs leading-6 text-white/65">
+                        <p className="mt-2 text-xs leading-6 text-slate-600">
                           The chosen color is now saved with each order for operations visibility.
                         </p>
                       </div>
                     </div>
 
                     {!isAuthenticated ? (
-                      <div className="rounded-[24px] border border-white/10 bg-white/5 p-5 text-sm text-white/75">
+                      <div className="rounded-[24px] border border-[rgba(74,96,105,0.1)] bg-white/75 p-5 text-sm text-slate-600">
                         Sign in with a customer account to place this order.
                         <div className="mt-4">
                           <Link
                             href={`/login?next=${encodeURIComponent(`/products/${product.id}`)}`}
-                            className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 font-semibold text-slate-950"
+                            className="button-primary inline-flex items-center gap-2 rounded-full px-4 py-2.5 font-semibold"
                           >
                             Sign in to order
                             <FiArrowRight />
@@ -410,18 +410,18 @@ export default function ProductDetailPage() {
                         </div>
                       </div>
                     ) : user?.role !== "customer" ? (
-                      <div className="rounded-[24px] border border-amber-300/30 bg-amber-400/10 p-5 text-sm text-amber-100">
+                      <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
                         This checkout flow is reserved for customer accounts. Staff can still browse products here and manage catalog or order operations from the dashboard.
                       </div>
                     ) : (
-                      <div className="flex flex-col gap-4 rounded-[24px] border border-white/10 bg-white/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex flex-col gap-4 rounded-[24px] border border-[rgba(74,96,105,0.1)] bg-white/75 p-5 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="text-sm font-semibold">
                             {selectedColor
                               ? `Ordering ${product.productName} in ${selectedColor}`
                               : `Ordering ${product.productName}`}
                           </p>
-                          <p className="mt-2 text-xs uppercase tracking-[0.18em] text-white/60">
+                          <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">
                             {hasVariantInventory && selectedColor
                               ? `${availableUnits} units currently available`
                               : `${product.stock} units in stock`}
@@ -431,7 +431,7 @@ export default function ProductDetailPage() {
                           type="button"
                           onClick={openOrderModal}
                           disabled={!canPlaceOrder}
-                          className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-slate-950 transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="button-primary inline-flex h-14 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Place order
                           <FiArrowRight />
@@ -444,10 +444,10 @@ export default function ProductDetailPage() {
             </div>
 
             {relatedProducts.length > 0 ? (
-              <div className="mt-10 rounded-[32px] border border-black/8 bg-white p-8 shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
+              <div className="soft-card mt-10 rounded-[32px] p-8">
                 <div className="flex items-end justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+                    <p className="section-kicker">
                       Similar picks
                     </p>
                     <h2 className="mt-2 text-3xl font-semibold text-slate-950">
@@ -477,7 +477,7 @@ export default function ProductDetailPage() {
       >
         {product ? (
           <form onSubmit={handleOrder} className="space-y-5">
-            <div className="rounded-[26px] border border-slate-200 bg-slate-50 p-5">
+            <div className="rounded-[26px] border border-[rgba(74,96,105,0.1)] bg-[rgba(248,246,242,0.88)] p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
@@ -490,7 +490,7 @@ export default function ProductDetailPage() {
                     {formatCurrency(effectiveUnitPrice)} per unit
                   </p>
                 </div>
-                <div className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-slate-600">
+                <div className="rounded-full border border-[rgba(74,96,105,0.1)] bg-white px-4 py-2 text-xs font-semibold text-slate-600">
                   {product.stock} total units
                 </div>
               </div>
@@ -516,14 +516,14 @@ export default function ProductDetailPage() {
                         onClick={() => setSelectedColor(color)}
                         className={`rounded-[22px] border px-4 py-4 text-left transition-colors ${
                           isSelected
-                            ? "border-slate-950 bg-slate-950 text-white"
-                            : "border-slate-200 bg-white text-slate-700 hover:border-slate-950"
+                            ? "border-[rgba(95,132,121,0.45)] bg-[rgba(228,239,234,0.95)] text-slate-900"
+                            : "border-[rgba(74,96,105,0.1)] bg-white text-slate-700 hover:border-[rgba(95,132,121,0.35)]"
                         }`}
                       >
                         <p className="text-sm font-semibold">{color}</p>
                         <p
                           className={`mt-2 text-xs ${
-                            isSelected ? "text-white/70" : "text-slate-500"
+                            isSelected ? "text-slate-600" : "text-slate-500"
                           }`}
                         >
                           {hasVariantInventory
@@ -555,7 +555,7 @@ export default function ProductDetailPage() {
                       )
                     )
                   }
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none"
+                  className="input-surface h-12 w-full rounded-2xl px-4 text-sm outline-none"
                 />
               </div>
 
@@ -568,7 +568,7 @@ export default function ProductDetailPage() {
                   value={contactPhone}
                   onChange={(event) => setContactPhone(event.target.value)}
                   placeholder="+92 300 1234567"
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none"
+                  className="input-surface h-12 w-full rounded-2xl px-4 text-sm outline-none"
                 />
               </div>
             </div>
@@ -582,7 +582,7 @@ export default function ProductDetailPage() {
                 onChange={(event) => setShippingAddress(event.target.value)}
                 rows={4}
                 placeholder="House number, street, area, city"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm outline-none"
+                className="input-surface w-full rounded-2xl px-4 py-4 text-sm outline-none"
               />
             </div>
 
@@ -595,11 +595,11 @@ export default function ProductDetailPage() {
                 onChange={(event) => setNotes(event.target.value)}
                 rows={3}
                 placeholder="Optional delivery notes"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm outline-none"
+                className="input-surface w-full rounded-2xl px-4 py-4 text-sm outline-none"
               />
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+            <div className="rounded-2xl border border-[rgba(74,96,105,0.1)] bg-[rgba(248,246,242,0.88)] px-4 py-4 text-sm text-slate-600">
               <div className="flex items-center justify-between gap-4">
                 <span>Estimated total</span>
                 <span className="text-lg font-semibold text-slate-950">
@@ -630,7 +630,7 @@ export default function ProductDetailPage() {
               <button
                 type="button"
                 onClick={closeOrderModal}
-                className="rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700"
+                className="button-secondary rounded-full px-5 py-3 text-sm font-semibold"
               >
                 Cancel
               </button>
@@ -642,7 +642,7 @@ export default function ProductDetailPage() {
                   (colorSelectionRequired && !selectedColor) ||
                   (hasVariantInventory && availableUnits <= 0)
                 }
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                className="button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {saving ? "Placing order..." : "Confirm order"}
                 {!saving && <FiArrowRight />}

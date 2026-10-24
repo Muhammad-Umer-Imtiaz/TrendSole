@@ -313,14 +313,14 @@ export default function AccountPage() {
 
   return (
     <AuthGuard>
-      <main className="min-h-screen bg-[#f5f3ee] text-slate-950">
+      <main className="app-shell min-h-screen text-slate-950">
         <Navbar />
 
         <section className="mx-auto max-w-7xl px-6 py-12">
           <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
             <div className="space-y-6">
-              <div className="rounded-[32px] border border-black/8 bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
-                <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-slate-950 text-white">
+              <div className="soft-card rounded-[32px] p-6">
+                <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-[linear-gradient(180deg,#8fb2a7_0%,#67887f_100%)] text-white">
                   <FiUser />
                 </div>
 
@@ -329,18 +329,18 @@ export default function AccountPage() {
                 </h1>
                 <p className="mt-2 text-sm text-slate-500">{user?.email ?? ""}</p>
 
-                <div className="mt-5 inline-flex rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
+                <div className="mt-5 inline-flex rounded-full bg-[rgba(228,239,234,0.92)] px-4 py-2 text-sm font-semibold text-slate-700">
                   {toSentenceCase(user?.role ?? "customer")}
                 </div>
 
                 {user?.role !== "customer" ? (
-                  <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+                  <div className="mt-5 rounded-2xl border border-[rgba(74,96,105,0.1)] bg-[rgba(248,246,242,0.88)] px-4 py-4 text-sm text-slate-600">
                     Operational users can still shop here, and you also have
                     access to the dashboard.
                     <div className="mt-3">
                       <Link
                         href="/dashboard"
-                        className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2.5 font-semibold text-white"
+                        className="button-primary inline-flex items-center gap-2 rounded-full px-4 py-2.5 font-semibold"
                       >
                         Open dashboard
                         <FiArrowRight />
@@ -352,7 +352,7 @@ export default function AccountPage() {
                 <button
                   type="button"
                   onClick={() => void logout({ redirect: true })}
-                  className="mt-6 inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-950 hover:text-slate-950"
+                  className="button-secondary mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
                 >
                   <FiLogOut />
                   Logout
@@ -373,7 +373,7 @@ export default function AccountPage() {
                 </div>
               )}
 
-              <div className="rounded-[28px] border border-black/8 bg-white p-3 shadow-[0_24px_70px_rgba(15,23,42,0.06)]">
+              <div className="soft-card rounded-[28px] p-3">
                 <div className="grid gap-3 md:grid-cols-5">
                   {tabs.map((tab) => {
                     const Icon = tab.icon;
@@ -386,17 +386,17 @@ export default function AccountPage() {
                         onClick={() => setActiveTab(tab.key)}
                         className={`rounded-[24px] px-4 py-4 text-left transition-colors ${
                           isActive
-                            ? "bg-slate-950 text-white"
-                            : "bg-slate-50 text-slate-700 hover:bg-slate-100"
+                            ? "bg-[rgba(228,239,234,0.95)] text-slate-900"
+                            : "bg-[rgba(248,246,242,0.88)] text-slate-700 hover:bg-[rgba(238,244,241,0.95)]"
                         }`}
                       >
-                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-base">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/60 text-base">
                           <Icon />
                         </div>
                         <p className="mt-4 text-sm font-semibold">{tab.label}</p>
                         <p
                           className={`mt-1 text-xs leading-6 ${
-                            isActive ? "text-white/70" : "text-slate-500"
+                            isActive ? "text-slate-600" : "text-slate-500"
                           }`}
                         >
                           {tab.description}

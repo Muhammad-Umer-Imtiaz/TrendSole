@@ -68,7 +68,7 @@ export default function OtpPage() {
           <label className="mb-2 block text-sm font-semibold text-slate-700">
             Verification code
           </label>
-          <div className="flex items-center rounded-2xl border border-slate-200 bg-white px-4">
+          <div className="input-surface flex items-center rounded-2xl px-4">
             <FiKey className="text-slate-400" />
             <input
               type="text"
@@ -92,7 +92,7 @@ export default function OtpPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="button-primary inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl px-5 text-sm font-semibold disabled:opacity-60"
         >
           {submitting ? "Verifying..." : "Verify account"}
           {!submitting && <FiArrowRight />}

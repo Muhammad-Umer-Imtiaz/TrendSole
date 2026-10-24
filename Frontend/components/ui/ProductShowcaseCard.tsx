@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { FiArrowUpRight, FiCheck } from "react-icons/fi";
@@ -61,26 +60,18 @@ export default function ProductShowcaseCard({
   const hasDiscount = discountedPrice < product.productPrice;
 
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 18 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{
-        duration: 0.45,
-        delay: index * 0.05,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-      whileHover={{ y: -5 }}
-      className="group overflow-hidden rounded-[30px] border border-[#ddd5ca] bg-[linear-gradient(180deg,#fffdf9_0%,#f7f1e8_100%)] shadow-[0_20px_60px_rgba(15,23,42,0.08)]"
+    <article
+      className="group overflow-hidden rounded-[30px] border border-[rgba(74,96,105,0.1)] bg-[linear-gradient(180deg,rgba(255,255,255,0.97)_0%,rgba(248,246,242,0.96)_100%)] shadow-[0_20px_50px_rgba(88,104,113,0.08)] transition-transform duration-200 hover:-translate-y-1"
+      style={{ transitionDelay: `${index * 30}ms` }}
     >
-      <div className="relative overflow-hidden border-b border-[#e8dfd2] bg-[radial-gradient(circle_at_top,_rgba(196,166,122,0.22),_transparent_48%),linear-gradient(135deg,#fbf6ef_0%,#f2ece3_100%)]">
+      <div className="relative overflow-hidden border-b border-[rgba(74,96,105,0.08)] bg-[radial-gradient(circle_at_top,_rgba(215,228,221,0.85),_transparent_48%),linear-gradient(135deg,#fbfaf7_0%,#f0f4f1_100%)]">
         <div className={`${compact ? "h-60" : "h-72"} relative`}>
           <div className="absolute left-5 top-5 z-20 flex flex-wrap gap-2">
-            <span className="rounded-full border border-black/8 bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-600">
+            <span className="rounded-full border border-[rgba(74,96,105,0.1)] bg-white/92 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-600">
               {getBadge(product, badge)}
             </span>
             {product.offerLabel ? (
-              <span className="rounded-full bg-amber-400 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-950">
+              <span className="rounded-full bg-[rgba(242,226,189,0.82)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-800">
                 {product.offerLabel}
               </span>
             ) : null}
@@ -91,10 +82,10 @@ export default function ProductShowcaseCard({
               src={primaryImage}
               alt={product.productName}
               fill
-              className="object-contain p-8 transition-transform duration-300 group-hover:scale-[1.03]"
+              className="object-contain p-8 transition-transform duration-300 group-hover:scale-[1.02]"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-stone-400">
+            <div className="flex h-full items-center justify-center text-sm text-slate-400">
               No image available
             </div>
           )}
@@ -104,18 +95,18 @@ export default function ProductShowcaseCard({
       <div className="space-y-4 p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-stone-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
               {product.productCategory}
             </p>
             <h3 className="mt-2 font-[family-name:var(--font-display)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               {product.productName}
             </h3>
-            <p className="mt-2 text-sm text-stone-600">{colorSummary}</p>
+            <p className="mt-2 text-sm text-slate-600">{colorSummary}</p>
           </div>
 
           <Link
             href={targetHref}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-950 text-white transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[rgba(228,239,234,0.95)] text-slate-800 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
             aria-label={`View ${product.productName}`}
           >
             <FiArrowUpRight />
@@ -135,7 +126,7 @@ export default function ProductShowcaseCard({
             .map((color) => (
             <span
               key={color}
-              className="rounded-full border border-[#ddd5ca] bg-white/90 px-3 py-1 text-xs font-medium text-slate-600"
+              className="rounded-full border border-[rgba(74,96,105,0.1)] bg-white/92 px-3 py-1 text-xs font-medium text-slate-600"
             >
               {color}
             </span>
@@ -143,7 +134,7 @@ export default function ProductShowcaseCard({
           {(product.colorVariants.length > 0
             ? product.colorVariants.length
             : product.colors.length) > 3 ? (
-            <span className="rounded-full border border-[#ddd5ca] bg-white/90 px-3 py-1 text-xs font-medium text-slate-600">
+            <span className="rounded-full border border-[rgba(74,96,105,0.1)] bg-white/92 px-3 py-1 text-xs font-medium text-slate-600">
               +
               {(product.colorVariants.length > 0
                 ? product.colorVariants.length
@@ -153,9 +144,9 @@ export default function ProductShowcaseCard({
           ) : null}
         </div>
 
-        <div className="flex items-center justify-between gap-4 border-t border-[#e7ddd1] pt-4">
+        <div className="flex items-center justify-between gap-4 border-t border-[rgba(74,96,105,0.09)] pt-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-stone-500">
+            <p className="text-xs uppercase tracking-[0.22em] text-slate-500">
               Price
             </p>
             <div className="mt-1">
@@ -171,10 +162,10 @@ export default function ProductShowcaseCard({
           </div>
 
           <div
-            className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ${
+            className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold ${
               product.stock > 0
-                ? "bg-emerald-100 text-emerald-700"
-                : "bg-rose-100 text-rose-700"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                : "border-rose-200 bg-rose-50 text-rose-700"
             }`}
           >
             <FiCheck className={product.stock > 0 ? "opacity-100" : "opacity-40"} />
@@ -182,6 +173,6 @@ export default function ProductShowcaseCard({
           </div>
         </div>
       </div>
-    </motion.article>
+    </article>
   );
 }

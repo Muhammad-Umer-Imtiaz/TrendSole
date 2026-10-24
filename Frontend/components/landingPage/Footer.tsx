@@ -1,65 +1,74 @@
 "use client";
 
-import {
-  FaFacebookF,
-  FaInstagram,
-  FaXTwitter,
-} from "react-icons/fa6";
+import Link from "next/link";
+import { FaFacebookF, FaInstagram, FaXTwitter } from "react-icons/fa6";
+
+const footerLinks = {
+  Shop: [
+    { label: "All products", href: "/products" },
+    { label: "Featured", href: "/#featured" },
+    { label: "New arrivals", href: "/#new-arrivals" },
+    { label: "Best sellers", href: "/#best-sellers" },
+  ],
+  Support: [
+    { label: "My account", href: "/account" },
+    { label: "Sign in", href: "/login" },
+    { label: "Reset password", href: "/forgot-password" },
+  ],
+};
 
 export default function Footer() {
   return (
-    <footer id="contact" className="mt-20 bg-black text-white">
-      <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 md:grid-cols-4">
-        <div>
-          <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold uppercase tracking-[0.14em]">
-            TREND SOLE
-          </h2>
+    <footer
+      id="contact"
+      className="mt-20 border-t border-[color:var(--border)] bg-[rgba(255,255,255,0.52)]"
+    >
+      <div className="mx-auto max-w-7xl px-6 py-14">
+        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.7fr_0.7fr]">
+          <div>
+            <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold text-slate-950">
+              Trend Sole
+            </h2>
+            <p className="mt-4 max-w-lg text-sm leading-7 text-slate-600">
+              Modern sneakers, clear product browsing, and a storefront designed
+              to feel easy from the first visit to the final order.
+            </p>
 
-          <p className="mt-4 text-sm leading-7 text-gray-400">
-            Engineered for elite performance and street-inspired style with a
-            clean luxury finish.
-          </p>
-
-          <div className="mt-6 flex gap-4 text-lg">
-            <FaFacebookF />
-            <FaInstagram />
-            <FaXTwitter />
+            <div className="mt-6 flex items-center gap-3 text-slate-600">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(74,96,105,0.1)] bg-white">
+                <FaFacebookF />
+              </span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(74,96,105,0.1)] bg-white">
+                <FaInstagram />
+              </span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-full border border-[rgba(74,96,105,0.1)] bg-white">
+                <FaXTwitter />
+              </span>
+            </div>
           </div>
+
+          {Object.entries(footerLinks).map(([title, links]) => (
+            <div key={title}>
+              <p className="section-kicker">{title}</p>
+              <div className="mt-4 grid gap-3">
+                {links.map((link) => (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className="text-sm text-slate-600 transition-colors hover:text-slate-950"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div>
-          <h3 className="mb-4 text-sm font-semibold tracking-[0.24em] text-white/80">SHOP</h3>
-
-          <ul className="space-y-3 text-gray-400 text-sm">
-            <li>New Arrivals</li>
-            <li>Best Sellers</li>
-            <li>Limited Edition</li>
-          </ul>
+        <div className="mt-10 flex flex-col gap-3 border-t border-[rgba(74,96,105,0.08)] pt-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} Trend Sole. Built for clear browsing and calm shopping.</p>
+          <p>Soft contrast, simpler structure, and product-first design.</p>
         </div>
-
-        <div>
-          <h3 className="mb-4 text-sm font-semibold tracking-[0.24em] text-white/80">SUPPORT</h3>
-
-          <ul className="space-y-3 text-gray-400 text-sm">
-            <li>Discord</li>
-            <li>Shipping Info</li>
-            <li>Contact Us</li>
-          </ul>
-        </div>
-
-        <div>
-          <h3 className="mb-4 text-sm font-semibold tracking-[0.24em] text-white/80">COMPANY</h3>
-
-          <ul className="space-y-3 text-gray-400 text-sm">
-            <li>Privacy Policy</li>
-            <li>Terms of Service</li>
-            <li>Our Story</li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="border-t border-gray-800 py-6 text-center text-sm text-gray-500">
-        © {new Date().getFullYear()} TrendSole. Engineered for elite performance.
       </div>
     </footer>
   );

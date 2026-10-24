@@ -57,7 +57,7 @@ export default function Table<T>({
         {Array.from({ length: 5 }).map((_, index) => (
           <div
             key={index}
-            className="h-14 animate-pulse rounded-2xl bg-slate-100"
+            className="h-14 animate-pulse rounded-2xl bg-[rgba(228,239,234,0.6)]"
           />
         ))}
       </div>
@@ -66,7 +66,7 @@ export default function Table<T>({
 
   if (data.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-300 px-6 py-10 text-center text-sm text-slate-500">
+      <div className="rounded-[26px] border border-dashed border-[rgba(74,96,105,0.22)] bg-[rgba(255,255,255,0.65)] px-6 py-10 text-center text-sm text-slate-500">
         {emptyMessage}
       </div>
     );
@@ -74,15 +74,15 @@ export default function Table<T>({
 
   return (
     <div>
-      <div className="overflow-hidden rounded-2xl border border-slate-200">
+      <div className="overflow-hidden rounded-[26px] border border-[rgba(74,96,105,0.1)] bg-white/85">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
+          <table className="min-w-full divide-y divide-[rgba(74,96,105,0.1)]">
+            <thead className="bg-[rgba(238,244,241,0.72)]">
               <tr>
                 {columns.map((column) => (
                   <th
                     key={column.key}
-                    className={`px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 ${column.className ?? ""}`}
+                    className={`px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 ${column.className ?? ""}`}
                   >
                     {column.header}
                   </th>
@@ -90,9 +90,9 @@ export default function Table<T>({
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-200 bg-white">
+            <tbody className="divide-y divide-[rgba(74,96,105,0.08)] bg-white/90">
               {visibleRows.map((row) => (
-                <tr key={keyExtractor(row)} className="align-top">
+                <tr key={keyExtractor(row)} className="align-top transition-colors hover:bg-[rgba(248,246,242,0.82)]">
                   {columns.map((column) => (
                     <td
                       key={column.key}

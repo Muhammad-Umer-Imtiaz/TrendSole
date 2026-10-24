@@ -106,7 +106,7 @@ function LoginPageContent() {
                   value={formData.email}
                   onChange={(event) => handleChange("email", event.target.value)}
                   placeholder="you@trendsole.com"
-                  className="h-14 w-full rounded-2xl border border-slate-200 bg-white px-4 text-slate-950 outline-none transition-colors focus:border-slate-950"
+                  className="input-surface h-14 w-full rounded-2xl px-4 text-slate-950 outline-none"
                 />
               </div>
 
@@ -119,7 +119,7 @@ function LoginPageContent() {
                   value={formData.password}
                   onChange={(event) => handleChange("password", event.target.value)}
                   placeholder="Enter your password"
-                  className="h-14 w-full rounded-2xl border border-slate-200 bg-white px-4 text-slate-950 outline-none transition-colors focus:border-slate-950"
+                  className="input-surface h-14 w-full rounded-2xl px-4 text-slate-950 outline-none"
                 />
               </div>
 
@@ -133,14 +133,14 @@ function LoginPageContent() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                className="button-primary inline-flex h-14 w-full items-center justify-center gap-2 rounded-2xl px-5 text-sm font-semibold disabled:opacity-60"
               >
                 {isLoading ? "Signing in..." : "Continue"}
                 {!isLoading && <FiArrowRight />}
               </button>
             </form>
 
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+      <div className="mt-6 rounded-2xl border border-[rgba(74,96,105,0.1)] bg-[rgba(248,246,242,0.88)] px-4 py-4 text-sm text-slate-500">
         New here? Customer accounts can sign up directly, while team access remains controlled from the backend.
       </div>
     </AuthShell>
@@ -151,8 +151,8 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-[#f5f3ee] px-6">
-          <div className="rounded-3xl border border-black/8 bg-white px-8 py-6 text-sm text-slate-500">
+        <div className="app-shell flex min-h-screen items-center justify-center px-6">
+          <div className="soft-panel rounded-3xl px-8 py-6 text-sm text-slate-500">
             Loading login...
           </div>
         </div>

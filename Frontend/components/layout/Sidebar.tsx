@@ -51,33 +51,33 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   return (
     <>
       <div
-        className={`fixed inset-0 z-40 bg-slate-950/30 transition-opacity lg:hidden ${
+        className={`fixed inset-0 z-40 bg-[rgba(32,49,58,0.16)] transition-opacity lg:hidden ${
           open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex h-[100dvh] w-72 flex-col overflow-y-auto border-r border-black/8 bg-white px-5 py-6 transition-transform lg:static lg:z-auto lg:h-full lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex h-[100dvh] w-72 flex-col overflow-y-auto border-r border-[rgba(74,96,105,0.1)] bg-[rgba(255,255,255,0.92)] px-5 py-6 shadow-[0_18px_50px_rgba(84,101,111,0.09)] transition-transform lg:static lg:z-auto lg:h-full lg:translate-x-0 lg:shadow-none ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(180deg,#8fb2a7_0%,#67887f_100%)] text-white">
               <FiActivity />
             </div>
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-950">
                 Trend Sole
               </p>
-              <p className="text-xs text-slate-500">Admin Dashboard</p>
+              <p className="text-xs text-slate-500">Operations workspace</p>
             </div>
           </Link>
 
           <button
             type="button"
-            className="rounded-full border border-slate-200 p-2 text-slate-500 lg:hidden"
+            className="button-secondary rounded-full p-2 text-slate-500 lg:hidden"
             onClick={onClose}
             aria-label="Close menu"
           >
@@ -98,8 +98,8 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                 onClick={onClose}
                 className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-slate-950 text-white"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                    ? "bg-[rgba(228,239,234,0.95)] text-slate-900"
+                    : "text-slate-600 hover:bg-[rgba(238,244,241,0.9)] hover:text-slate-950"
                 }`}
               >
                 <Icon className="text-base" />
@@ -109,7 +109,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           })}
         </div>
 
-        <div className="mt-auto rounded-3xl border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-auto rounded-3xl border border-[rgba(74,96,105,0.1)] bg-[rgba(238,244,241,0.72)] p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
             Signed in as
           </p>

@@ -27,7 +27,7 @@ export default function ResetPasswordLandingPage() {
       }
     >
       <div className="grid gap-4">
-        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+        <div className="rounded-[28px] border border-[rgba(74,96,105,0.1)] bg-[rgba(248,246,242,0.88)] p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-700">
               <FiMail />
@@ -41,7 +41,7 @@ export default function ResetPasswordLandingPage() {
           </div>
         </div>
 
-        <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+        <div className="rounded-[28px] border border-[rgba(74,96,105,0.1)] bg-[rgba(248,246,242,0.88)] p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-700">
               <FiKey />

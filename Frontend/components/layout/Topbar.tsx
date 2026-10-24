@@ -21,12 +21,12 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between border-b border-black/8 bg-[#f8f6f2]/95 px-4 py-4 backdrop-blur lg:px-8">
+    <header className="sticky top-0 z-30 flex items-center justify-between border-b border-[rgba(74,96,105,0.08)] bg-[rgba(248,246,242,0.82)] px-4 py-4 backdrop-blur lg:px-8">
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={onMenuClick}
-          className="rounded-2xl border border-slate-200 bg-white p-3 text-slate-600 lg:hidden"
+          className="button-secondary rounded-2xl p-3 text-slate-600 lg:hidden"
           aria-label="Open sidebar"
         >
           <FiMenu />
@@ -43,7 +43,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-3 sm:block">
+        <div className="hidden rounded-2xl border border-[rgba(74,96,105,0.1)] bg-white/85 px-4 py-3 sm:block">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
             Role
           </p>
@@ -56,7 +56,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
           type="button"
           onClick={handleLogout}
           disabled={isLoading}
-          className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="button-primary inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition-colors disabled:opacity-60"
         >
           <FiLogOut />
           Logout

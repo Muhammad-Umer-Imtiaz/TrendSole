@@ -22,7 +22,7 @@ export default function PaginationControls({
   }
 
   return (
-    <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mt-5 flex flex-col gap-3 rounded-[24px] border border-[rgba(74,96,105,0.1)] bg-[rgba(238,244,241,0.68)] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-slate-500">
         Page <span className="font-semibold text-slate-900">{page}</span> of{" "}
         <span className="font-semibold text-slate-900">{totalPages}</span>
@@ -34,7 +34,7 @@ export default function PaginationControls({
           type="button"
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
-          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-950 hover:text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+          className="button-secondary inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
           <FiChevronLeft />
           Previous
@@ -44,7 +44,7 @@ export default function PaginationControls({
           type="button"
           disabled={page >= totalPages}
           onClick={() => onPageChange(page + 1)}
-          className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-950 hover:text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+          className="button-secondary inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
           Next
           <FiChevronRight />

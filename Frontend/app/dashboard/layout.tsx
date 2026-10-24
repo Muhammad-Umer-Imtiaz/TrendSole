@@ -14,7 +14,7 @@ export default function DashboardLayout({
 
   return (
     <AuthGuard>
-      <div className="h-[100dvh] overflow-hidden bg-[#f5f3ee] text-slate-950 lg:flex">
+      <div className="app-shell h-[100dvh] overflow-hidden text-slate-950 lg:flex">
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         <div className="flex min-w-0 min-h-0 flex-1 flex-col">
