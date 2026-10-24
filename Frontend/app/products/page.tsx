@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { Suspense, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { FiFilter, FiSearch, FiSliders, FiX } from "react-icons/fi";
 import Footer from "@/components/landingPage/Footer";
@@ -17,7 +17,7 @@ const DEFAULT_PAGINATION: PaginationMeta = {
   totalPages: 1,
 };
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -364,5 +364,26 @@ export default function ProductsPage() {
 
       <Footer />
     </main>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    // URL search parameters are available after hydration on this static route.
+    <Suspense
+      fallback={
+        <main className="app-shell min-h-screen text-slate-950">
+          <Navbar />
+          <div role="status" className="mx-auto max-w-7xl px-6 py-8">
+            <div className="soft-panel rounded-3xl px-8 py-6 text-sm text-slate-500">
+              Loading products...
+            </div>
+          </div>
+          <Footer />
+        </main>
+      }
+    >
+      <ProductsPageContent />
+    </Suspense>
   );
 }
